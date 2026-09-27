@@ -21,7 +21,7 @@ const emptyItem = (): InvoiceItem => ({ name: '', qty: 0, price: 0, specs: '' })
 
 // Map currency code → flag emoji + label
 const CURRENCY_META: Record<string, { flag: string; label: string }> = {
-  ILS: { flag: '🇮🇱', label: 'شيكل' },
+  ILS: { flag: '🇵🇸', label: 'شيكل' },
   USD: { flag: '🇺🇸', label: 'دولار' },
   JOD: { flag: '🇯🇴', label: 'دينار' },
   EUR: { flag: '🇪🇺', label: 'يورو' },
@@ -531,6 +531,7 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
               </div>
               <input
                 type="number"
+                inputMode="decimal"
                 value={it.qty || ''}
                 onChange={(e) => updateItem(idx, { qty: Number(e.target.value) })}
                 placeholder="الكمية"
@@ -538,6 +539,7 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
               />
               <input
                 type="number"
+                inputMode="decimal"
                 value={it.price || ''}
                 onChange={(e) => updateItem(idx, { price: Number(e.target.value) })}
                 placeholder="السعر"

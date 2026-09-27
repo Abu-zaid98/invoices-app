@@ -349,15 +349,15 @@ export async function drawInvoiceCanvas(inv: Invoice, meta: Meta, scale = 2): Pr
     const nameLines = wrap(c, it.name, nameFont, cItem - 16)
     const specLines = it.specs ? wrap(c, it.specs, specFont, cItem - 16) : []
     const rowH = 16 + nameLines.length * 20 + specLines.length * 17 + 12
-    const by = y + 14
     // رقم
     c.save()
     c.fillStyle = classic ? '#e5e7eb' : p.primary + '22'
     c.beginPath(); c.arc(cellCX(xNum, cNum), y + rowH / 2, 12, 0, Math.PI * 2); c.fill()
     c.restore()
     text(c, String(i + 1), cellCX(xNum, cNum), y + rowH / 2 + 4, F(800, 11), classic ? '#111827' : p.primaryDark, 'center', 'ltr')
-    // الاسم + المواصفات
-    let ty = by
+    // الاسم + المواصفات — متمركزة عمودياً داخل الصف
+    const blockH = nameLines.length * 20 + specLines.length * 17
+    let ty = y + (rowH - blockH) / 2 + 15
     nameLines.forEach((ln) => { text(c, ln, xItem + cItem - 8, ty, nameFont, INK, 'right'); ty += 20 })
     specLines.forEach((ln) => { text(c, ln, xItem + cItem - 8, ty, specFont, MUTED, 'right'); ty += 17 })
     // الكمية والسعر والإجمالي (عمودياً بالمنتصف) — أرقام باتجاه LTR الصريح

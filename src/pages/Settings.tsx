@@ -371,6 +371,7 @@ export default function Settings({ onLocked }: { onLocked: () => void }) {
               <label className="mb-1 block text-xs text-[var(--muted)]">قيمة {c} مقابل شيكل واحد</label>
               <input
                 type="number"
+                inputMode="decimal"
                 step="0.01"
                 value={rateDraft[c] ?? 1}
                 onChange={(e) => setRateDraft((r) => ({ ...r, [c]: Number(e.target.value) }))}
