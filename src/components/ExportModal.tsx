@@ -50,101 +50,82 @@ export default function ExportModal({ invoice, meta, onClose }: Props) {
 
   return (
     <>
-      {/* Backdrop */}
       <div
+        onClick={onClose}
         style={{
           position: 'fixed', inset: 0, zIndex: 50,
-          background: 'rgba(0,0,0,0.7)',
+          background: 'rgba(0, 0, 0, 0.3)',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
         }}
-        onClick={onClose}
       />
-
-      {/* Sheet */}
       <div
         style={{
-          position: 'fixed',
-          bottom: 0, left: 0, right: 0,
-          zIndex: 51,
-          display: 'flex',
-          justifyContent: 'center',
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 51,
+          display: 'flex', justifyContent: 'center',
         }}
       >
         <div
           style={{
-            width: '100%',
-            maxWidth: 480,
-            borderRadius: '24px 24px 0 0',
+            width: '100%', maxWidth: 480,
+            borderRadius: '20px 20px 0 0',
             padding: '20px 20px 36px',
-            background: 'linear-gradient(160deg,#141a2d,#0c1220)',
-            boxShadow: '0 -20px 60px rgba(0,0,0,0.6)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--modal-bg)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+            border: '0.5px solid var(--separator)',
             borderBottom: 'none',
+            boxShadow: '0 -12px 40px rgba(0, 0, 0, 0.1)',
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Handle bar */}
           <div style={{
             width: 40, height: 4,
-            background: 'rgba(255,255,255,0.18)',
+            background: 'var(--separator)',
             borderRadius: 999,
             margin: '0 auto 20px',
           }} />
 
-          {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
             <div style={{
-              width: 56, height: 56,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg,rgba(255,176,32,.3),rgba(255,122,61,.2))',
-              border: '1px solid rgba(255,176,32,.4)',
-              fontSize: 24,
+              width: 56, height: 56, borderRadius: '50%',
+              background: 'rgba(0, 122, 255, 0.12)',
+              border: '1px solid rgba(0, 122, 255, 0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 12px',
+              margin: '0 auto 12px', fontSize: 24,
             }}>📄</div>
             <div style={{
-              fontSize: 20, fontWeight: 900,
-              background: 'linear-gradient(90deg,var(--brand),var(--brand2))',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              marginBottom: 6,
+              fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)',
+              marginBottom: 4,
             }}>
               تصدير الفاتورة
             </div>
-            <div style={{ color: 'var(--muted)', fontSize: 13, direction: 'rtl' }}>
+            <div style={{ color: 'var(--muted)', fontSize: 13, fontWeight: 400 }}>
               فاتورة رقم{' '}
-              <span style={{ color: 'var(--text)', fontWeight: 700 }}>#{invNum}</span>
+              <span style={{ color: 'var(--text)', fontWeight: 600 }}>#{invNum}</span>
               {' — '}
-              <span style={{ color: 'var(--text)', fontWeight: 700 }}>{invoice.party}</span>
+              <span style={{ color: 'var(--text)', fontWeight: 600 }}>{invoice.party}</span>
             </div>
           </div>
 
-          {/* Error */}
           {errorMsg && (
             <div style={{
-              background: 'rgba(255,90,95,0.12)',
-              border: '1px solid rgba(255,90,95,0.35)',
-              borderRadius: 12,
-              padding: '10px 14px',
-              fontSize: 13,
-              color: '#ff8a8e',
-              marginBottom: 14,
-              textAlign: 'center',
-              direction: 'rtl',
+              background: 'rgba(255, 59, 48, 0.08)',
+              border: '0.5px solid rgba(255, 59, 48, 0.2)',
+              borderRadius: '12px', padding: '10px 14px',
+              fontSize: 13, fontWeight: 500, color: '#FF3B30',
+              marginBottom: 14, textAlign: 'center', direction: 'rtl',
             }}>
               ⚠️ {errorMsg}
             </div>
           )}
 
-          {/* Buttons */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <ExportBtn
               icon="📄"
               label="تحميل PDF"
               sub="ملف حقيقي A4 قابل للمشاركة والأرشفة"
-              gradient="linear-gradient(135deg,#b71c1c,#e53935)"
+              gradient="linear-gradient(135deg,#007AFF,#5856D6)"
               state={pdfState}
               onClick={() => handleExport('pdf', setPdfState)}
             />
@@ -152,7 +133,7 @@ export default function ExportModal({ invoice, meta, onClose }: Props) {
               icon="🖼️"
               label="تحميل PNG"
               sub="صورة عالية الدقة للمشاركة والأرشفة"
-              gradient="linear-gradient(135deg,#1565c0,#1e88e5)"
+              gradient="linear-gradient(135deg,#34C759,#30D158)"
               state={pngState}
               onClick={() => handleExport('png', setPngState)}
             />
@@ -160,28 +141,19 @@ export default function ExportModal({ invoice, meta, onClose }: Props) {
               icon="🖨️"
               label="طباعة مباشرة"
               sub="افتح نافذة الطباعة في المتصفح"
-              gradient="linear-gradient(135deg,#1b5e20,#388e3c)"
+              gradient="linear-gradient(135deg,#FF9500,#FFCC00)"
               state={printState}
               onClick={() => handleExport('print', setPrintState)}
             />
           </div>
 
-          {/* Close */}
           <button
             onClick={onClose}
             style={{
-              marginTop: 14,
-              width: '100%',
-              padding: '13px',
-              borderRadius: 14,
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)',
-              color: 'var(--muted)',
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              direction: 'rtl',
+              marginTop: 14, width: '100%', padding: '13px', borderRadius: '14px',
+              border: '0.5px solid var(--separator)', background: 'var(--modal-field)',
+              color: 'var(--text)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
+              fontFamily: 'inherit', transition: 'all 0.15s ease',
             }}
           >
             إغلاق
@@ -192,7 +164,6 @@ export default function ExportModal({ invoice, meta, onClose }: Props) {
   )
 }
 
-// ─── Export button ─────────────────────────────────────────────────────────────
 function ExportBtn({
   icon, label, sub, gradient, state, onClick,
 }: {
@@ -206,8 +177,8 @@ function ExportBtn({
   const disabled = state === 'loading'
 
   const bg =
-    state === 'success' ? 'linear-gradient(135deg,#1b5e20,#2e7d32)' :
-    state === 'error'   ? 'linear-gradient(135deg,#7f0000,#c62828)' :
+    state === 'success' ? 'linear-gradient(135deg,#34C759,#30D158)' :
+    state === 'error'   ? 'linear-gradient(135deg,#FF3B30,#FF453A)' :
     gradient
 
   return (
@@ -215,60 +186,40 @@ function ExportBtn({
       disabled={disabled}
       onClick={onClick}
       style={{
-        width: '100%',
-        display: 'grid',
+        width: '100%', display: 'grid',
         gridTemplateColumns: 'auto 1fr auto',
-        alignItems: 'center',
-        gap: 12,
-        padding: '14px 16px',
-        borderRadius: 16,
-        border: 'none',
-        background: bg,
-        color: '#fff',
+        alignItems: 'center', gap: 12,
+        padding: '14px 16px', borderRadius: '16px', border: 'none',
+        background: bg, color: '#fff',
         cursor: disabled ? 'default' : 'pointer',
         opacity: disabled ? 0.75 : 1,
-        transition: 'transform .2s, box-shadow .2s',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
-        fontFamily: 'inherit',
-        direction: 'rtl',
-        textAlign: 'right',
-      }}
-      onMouseEnter={(e) => {
-        if (!disabled) {
-          e.currentTarget.style.transform = 'translateY(-2px)'
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)'
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)'
-        e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.3)'
+        transition: 'transform .15s ease, box-shadow .15s ease',
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
+        fontFamily: 'inherit', direction: 'rtl', textAlign: 'right',
       }}
     >
-      {/* Icon */}
       <span style={{ fontSize: 22, lineHeight: 1 }}>
         {state === 'loading' ? <Spinner /> :
          state === 'success' ? '✅' :
          state === 'error'   ? '❌' : icon}
       </span>
 
-      {/* Text */}
       <span style={{ textAlign: 'right' }}>
         {state === 'loading' ? (
-          <span style={{ fontSize: 14, fontWeight: 700 }}>جارٍ التصدير…</span>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>جارٍ التصدير…</span>
         ) : state === 'success' ? (
-          <span style={{ fontSize: 14, fontWeight: 700 }}>تم بنجاح!</span>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>تم بنجاح!</span>
         ) : state === 'error' ? (
-          <span style={{ fontSize: 14, fontWeight: 700 }}>فشل التصدير</span>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>فشل التصدير</span>
         ) : (
           <>
-            <div style={{ fontSize: 14, fontWeight: 800, lineHeight: 1.3 }}>{label}</div>
-            <div style={{ fontSize: 11.5, opacity: 0.75, marginTop: 2, fontWeight: 400 }}>{sub}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.3 }}>{label}</div>
+            <div style={{ fontSize: 11.5, opacity: 0.8, marginTop: 2, fontWeight: 400 }}>{sub}</div>
           </>
         )}
       </span>
 
-      {/* Arrow (RTL: arrow points left = towards content) */}
-      <span style={{ fontSize: 15, opacity: 0.5, direction: 'ltr' }}>→</span>
+      <span style={{ fontSize: 15, opacity: 0.6, direction: 'ltr' }}>→</span>
     </button>
   )
 }
@@ -276,11 +227,9 @@ function ExportBtn({
 function Spinner() {
   return (
     <span style={{
-      display: 'inline-block',
-      width: 20, height: 20,
+      display: 'inline-block', width: 20, height: 20,
       border: '2.5px solid rgba(255,255,255,0.3)',
-      borderTopColor: '#fff',
-      borderRadius: '50%',
+      borderTopColor: '#fff', borderRadius: '50%',
       animation: 'spin .7s linear infinite',
       verticalAlign: 'middle',
     }} />

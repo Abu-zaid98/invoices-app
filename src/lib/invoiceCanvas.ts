@@ -20,9 +20,8 @@ interface Palette {
   accent: string
 }
 
-const PALETTES: Record<'gold' | 'blue', Palette> = {
-  gold: { primary: '#d4930e', primaryLight: '#ffb020', primaryDark: '#b37800', accent: '#22c9a3' },
-  blue: { primary: '#1e88e5', primaryLight: '#5ea8ff', primaryDark: '#1565c0', accent: '#00d4ff' },
+const PALETTE: Palette = {
+  primary: '#d4930e', primaryLight: '#ffb020', primaryDark: '#b37800', accent: '#22c9a3',
 }
 const CLASSIC: Palette = { primary: '#6b7280', primaryLight: '#9ca3af', primaryDark: '#111827', accent: '#374151' }
 
@@ -171,7 +170,7 @@ function drawFit(
 /** يرسم الفاتورة كاملة على Canvas جديد ويعيده (scale=2 للطباعة) */
 export async function drawInvoiceCanvas(inv: Invoice, meta: Meta, scale = 2): Promise<HTMLCanvasElement> {
   const classic = meta.printTemplate === 'classic'
-  const p: Palette = classic ? CLASSIC : (PALETTES[meta.theme === 'blue' ? 'blue' : 'gold'] ?? PALETTES.gold)
+  const p: Palette = classic ? CLASSIC : PALETTE
   const sym = currencySymbol(inv.currency)
   const isSale = inv.type === 'sale'
   const isCredit = inv.type === 'credit'

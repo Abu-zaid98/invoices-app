@@ -2,10 +2,9 @@ import { useState } from 'react'
 import { usePWAInstall } from '../lib/usePWAInstall'
 
 /**
- * InstallBanner — بانر تثبيت PWA
+ * InstallBanner — بانر تثبيت PWA — تصميم Apple
  * - أندرويد/Chrome: زر تثبيت مباشر عبر beforeinstallprompt
  * - iPhone: خطوات يدوية (مشاركة → إضافة إلى الشاشة الرئيسية)
- * - يبرز: العمل دون إنترنت + البيانات محلية على الجهاز + قفل PIN
  */
 export default function InstallBanner() {
   const { visible, isIOS, canNativePrompt, install, dismiss } = usePWAInstall()
@@ -32,8 +31,10 @@ export default function InstallBanner() {
           onClick={() => setShowIOSHelp(false)}
           style={{
             position: 'fixed', inset: 0, zIndex: 70,
-            background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)',
-            animation: 'fadeIn .18s ease',
+            background: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            animation: 'fadeIn .2s ease',
           }}
         />
         <div
@@ -42,16 +43,19 @@ export default function InstallBanner() {
           style={{
             position: 'fixed', top: '50%', left: '50%',
             transform: 'translate(-50%,-50%)', zIndex: 71,
-            width: 'calc(100% - 40px)', maxWidth: 380,
-            background: 'linear-gradient(160deg,#16213a,#0d1526)',
-            border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24,
-            padding: '28px 22px 22px', boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
-            animation: 'confirmSlideUp .22s cubic-bezier(.34,1.56,.64,1)',
+            width: 'calc(100% - 48px)', maxWidth: 340,
+            background: 'var(--modal-bg)',
+            backdropFilter: 'blur(40px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+            border: '0.5px solid var(--separator)', borderRadius: '20px',
+            padding: '28px 20px 20px',
+            boxShadow: '0 24px 80px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08)',
+            animation: 'scaleIn .25s cubic-bezier(0.34, 1.56, 0.64, 1)',
             direction: 'rtl', textAlign: 'right',
           }}
         >
           <div style={{ textAlign: 'center', fontSize: 40, marginBottom: 10 }}>📲</div>
-          <h3 style={{ fontSize: 17, fontWeight: 900, color: '#f0f4ff', textAlign: 'center', marginBottom: 14 }}>
+          <h3 style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)', textAlign: 'center', marginBottom: 14 }}>
             التثبيت على iPhone
           </h3>
           {[
@@ -61,36 +65,33 @@ export default function InstallBanner() {
           ].map(([n, t]) => (
             <div key={n} style={{
               display: 'flex', gap: 10, alignItems: 'flex-start',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 12, padding: '10px 12px', marginBottom: 8,
-              fontSize: 13, color: '#cbd5e1', lineHeight: 1.7,
+              background: 'rgba(0, 122, 255, 0.06)',
+              border: '0.5px solid rgba(0, 122, 255, 0.15)',
+              borderRadius: '12px', padding: '10px 12px', marginBottom: 8,
+              fontSize: 13, fontWeight: 500, color: 'var(--text)', lineHeight: 1.7,
             }}>
               <span>{n}</span><span>{t}</span>
             </div>
           ))}
           <div style={{
-            fontSize: 12, color: '#8b96ab', textAlign: 'center',
-            margin: '12px 0 16px', lineHeight: 1.8,
+            fontSize: 12, color: 'var(--muted)', textAlign: 'center',
+            margin: '12px 0 16px', lineHeight: 1.8, fontWeight: 400,
           }}>
             🔒 بياناتك تبقى على جهازك (IndexedDB) وتعمل دون إنترنت بعد أول تحميل
           </div>
           <button
             onClick={() => { setShowIOSHelp(false); dismiss() }}
             style={{
-              width: '100%', padding: '13px', borderRadius: 14, border: 'none',
-              background: 'linear-gradient(135deg,var(--brand),var(--brand2))',
-              color: '#1a1200', fontSize: 14, fontWeight: 800, cursor: 'pointer',
-              fontFamily: 'inherit',
+              width: '100%', padding: '12px', borderRadius: '14px', border: 'none',
+              background: '#007AFF', color: '#fff', fontSize: 15, fontWeight: 600,
+              letterSpacing: '-0.01em', cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(0, 122, 255, 0.25)',
+              fontFamily: 'inherit', transition: 'all 0.15s ease',
             }}
           >
             فهمت، شكراً
           </button>
         </div>
-        <style>{`
-          @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-          @keyframes confirmSlideUp { from { opacity:0; transform:translate(-50%,-44%) } to { opacity:1; transform:translate(-50%,-50%) } }
-        `}</style>
       </>
     )
   }
@@ -108,23 +109,25 @@ export default function InstallBanner() {
       <div style={{
         pointerEvents: 'auto',
         width: '100%', maxWidth: 508,
-        background: 'linear-gradient(160deg,#1a2340,#0d1526)',
-        border: '1px solid rgba(255,176,32,0.35)',
-        borderRadius: 20, padding: '14px 14px 12px',
-        boxShadow: '0 18px 50px rgba(0,0,0,0.55), 0 0 30px rgba(255,176,32,0.12)',
-        animation: 'installUp .3s cubic-bezier(.34,1.4,.64,1)',
+        background: 'var(--modal-bg)',
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        border: '0.5px solid var(--separator)',
+        borderRadius: '20px', padding: '14px 16px 12px',
+        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06)',
+        animation: 'slideUp .3s cubic-bezier(0.34, 1.4, 0.64, 1)',
         direction: 'rtl',
       }}>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <img
             src="icon-192.png" alt="أيقونة التطبيق"
-            style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, boxShadow: '0 4px 14px rgba(0,0,0,0.4)' }}
+            style={{ width: 52, height: 52, borderRadius: '14px', flexShrink: 0, boxShadow: 'var(--shadow-sm)' }}
           />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14.5, fontWeight: 900, color: '#fff' }}>
+            <div style={{ fontSize: 14.5, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
               📲 ثبّت التطبيق على هاتفك
             </div>
-            <div style={{ fontSize: 12, color: '#9aa5b8', lineHeight: 1.7, marginTop: 2 }}>
+            <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginTop: 2, fontWeight: 400 }}>
               وصول سريع من الشاشة الرئيسية · يعمل دون إنترنت · 🔒 بياناتك على جهازك فقط
             </div>
           </div>
@@ -132,7 +135,7 @@ export default function InstallBanner() {
             onClick={dismiss}
             aria-label="إغلاق"
             style={{
-              background: 'transparent', border: 'none', color: '#8b96ab',
+              background: 'transparent', border: 'none', color: 'var(--muted)',
               fontSize: 16, cursor: 'pointer', padding: 4, flexShrink: 0,
             }}
           >
@@ -145,14 +148,16 @@ export default function InstallBanner() {
             disabled={busy || (!canNativePrompt && !isIOS)}
             title={!canNativePrompt && !isIOS ? 'افتح من متصفح الهاتف (Chrome) لرؤية زر التثبيت' : 'تثبيت التطبيق'}
             style={{
-              flex: 1, padding: '11px', borderRadius: 12, border: 'none',
+              flex: 1, padding: '11px', borderRadius: '12px', border: 'none',
               background: (busy || (!canNativePrompt && !isIOS))
-                ? 'rgba(255,255,255,0.1)'
-                : 'linear-gradient(135deg,var(--brand),var(--brand2))',
-              color: (busy || (!canNativePrompt && !isIOS)) ? '#8b96ab' : '#1a1200',
-              fontSize: 14, fontWeight: 800,
+                ? 'var(--separator)'
+                : '#007AFF',
+              color: (busy || (!canNativePrompt && !isIOS)) ? 'var(--muted)' : '#fff',
+              fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em',
               cursor: (busy || (!canNativePrompt && !isIOS)) ? 'default' : 'pointer',
               fontFamily: 'inherit',
+              boxShadow: (busy || (!canNativePrompt && !isIOS)) ? 'none' : '0 2px 8px rgba(0, 122, 255, 0.25)',
+              transition: 'all 0.15s ease',
             }}
           >
             {busy ? 'جارٍ...' : isIOS ? 'طريقة التثبيت 📲' : '⬇️ تثبيت الآن'}
@@ -160,20 +165,16 @@ export default function InstallBanner() {
           <button
             onClick={dismiss}
             style={{
-              padding: '11px 18px', borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.12)',
-              background: 'rgba(255,255,255,0.05)',
-              color: '#8b96ab', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              fontFamily: 'inherit',
+              padding: '11px 18px', borderRadius: '12px',
+              border: '0.5px solid var(--separator)', background: 'var(--modal-field)',
+              color: 'var(--text)', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+              fontFamily: 'inherit', transition: 'all 0.15s ease',
             }}
           >
             لاحقاً
           </button>
         </div>
       </div>
-      <style>{`
-        @keyframes installUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
-      `}</style>
     </div>
   )
 }

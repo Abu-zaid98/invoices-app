@@ -35,8 +35,8 @@ function writeLock(s: LockState) {
 /** مدة القفل التصاعدية بالمللي ثانية حسب عدد الإخفاقات */
 function backoffMs(fail: number): number {
   if (fail <= MAX_FREE_TRIES) return 0
-  const step = fail - MAX_FREE_TRIES // 1,2,3...
-  const minutes = Math.min(15, Math.pow(2, step - 1)) // 1,2,4,8,15...
+  const step = fail - MAX_FREE_TRIES
+  const minutes = Math.min(15, Math.pow(2, step - 1))
   return minutes * 60 * 1000
 }
 
@@ -60,7 +60,6 @@ export default function PinLogin({ onUnlock }: { onUnlock: () => void }) {
   const lockedMs = Math.max(0, lock.until - now)
   const locked = lockedMs > 0
 
-  // عدّاد تنازلي أثناء القفل
   useEffect(() => {
     if (!locked) return
     const t = setInterval(() => setNow(Date.now()), 1000)
@@ -132,58 +131,96 @@ export default function PinLogin({ onUnlock }: { onUnlock: () => void }) {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center">
-      <div className="text-5xl drop-shadow-[0_0_14px_rgba(255,176,32,0.6)] animate-pulse">🔆</div>
-      <h2 className="mt-3 text-xl font-black brand-text">
+      <div style={{
+        width: 80, height: 80, borderRadius: '22px',
+        background: 'linear-gradient(135deg, #007AFF, #5856D6)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 36, color: '#fff', marginBottom: 24,
+        boxShadow: '0 8px 24px rgba(0, 122, 255, 0.3)',
+      }}>
+        🔆
+      </div>
+      <h2 className="mt-3 text-xl font-bold" style={{ letterSpacing: '-0.02em', color: 'var(--text)' }}>
         {stage === 'setup2' ? 'أعد إدخال الرمز للتأكيد' : meta.pin ? 'أدخل رمز الدخول' : 'أنشئ رمز الدخول'}
       </h2>
-      <p className="mt-1 text-sm text-[var(--muted)]">رمز رقمي (٤ أرقام أو أكثر)</p>
+      <p className="mt-1 text-sm" style={{ color: 'var(--muted)', fontWeight: 400 }}>رمز رقمي (٤ أرقام أو أكثر)</p>
       {locked ? (
-        <div className="my-5 rounded-2xl border border-red-500/40 bg-red-500/10 px-6 py-4 text-sm font-bold text-red-300">
+        <div className="my-5 rounded-2xl border border-[rgba(255,59,48,0.2)] bg-[rgba(255,59,48,0.06)] px-6 py-4 text-sm font-medium" style={{ color: '#FF3B30' }}>
           🔒 مقفل مؤقتاً لحمايتك
-          <div className="mt-1 text-lg font-black">حاول بعد {fmtWait(lockedMs)}</div>
+          <div className="mt-1 text-lg font-bold">حاول بعد {fmtWait(lockedMs)}</div>
         </div>
       ) : (
-      <div className="my-5 flex gap-3">
-        {Array.from({ length: dotsLen }).map((_, i) => (
-          <div
-            key={i}
-            className={`h-4 w-4 rounded-full border-2 border-[var(--brand)] transition-all ${
-              i < buffer.length ? 'scale-110 bg-[var(--brand)] shadow-[0_0_16px_var(--brand)]' : ''
-            }`}
-          />
-        ))}
-      </div>
+        <div className="my-5 flex gap-3">
+          {Array.from({ length: dotsLen }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-4 w-4 rounded-full border-2 transition-all ${
+                i < buffer.length ? 'scale-110' : ''
+              }`}
+              style={{
+                borderColor: i < buffer.length ? '#007AFF' : 'var(--separator)',
+                background: i < buffer.length ? '#007AFF' : 'transparent',
+                boxShadow: i < buffer.length ? '0 0 12px rgba(0, 122, 255, 0.4)' : 'none',
+              }}
+            />
+          ))}
+        </div>
       )}
       <div className="grid w-[270px] grid-cols-3 gap-3.5">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
           <button
             key={n}
             onClick={() => press(String(n))}
-            className="h-16 rounded-full border border-[var(--border)] bg-[var(--card)] text-xl backdrop-blur active:btn-brand active:text-black"
+            className="h-16 rounded-full border text-xl font-medium transition-all active:scale-95"
+            style={{
+              borderColor: 'var(--separator)',
+              background: 'var(--card)',
+              color: 'var(--text)',
+              boxShadow: 'var(--shadow-sm)',
+            }}
           >
             {n}
           </button>
         ))}
-        <button onClick={() => press('clear')} className="h-16 rounded-full border border-[var(--border)] bg-[var(--card)] text-sm">
+        <button
+          onClick={() => press('clear')}
+          className="h-16 rounded-full border text-sm font-medium transition-all active:scale-95"
+          style={{ borderColor: 'var(--separator)', background: 'var(--card)', color: 'var(--muted)', boxShadow: 'var(--shadow-sm)' }}
+        >
           مسح
         </button>
-        <button onClick={() => press('0')} className="h-16 rounded-full border border-[var(--border)] bg-[var(--card)] text-xl">
+        <button
+          onClick={() => press('0')}
+          className="h-16 rounded-full border text-xl font-medium transition-all active:scale-95"
+          style={{ borderColor: 'var(--separator)', background: 'var(--card)', color: 'var(--text)', boxShadow: 'var(--shadow-sm)' }}
+        >
           0
         </button>
-        <button onClick={() => press('back')} className="h-16 rounded-full border border-[var(--border)] bg-[var(--card)] text-xl">
+        <button
+          onClick={() => press('back')}
+          className="h-16 rounded-full border text-xl font-medium transition-all active:scale-95"
+          style={{ borderColor: 'var(--separator)', background: 'var(--card)', color: 'var(--text)', boxShadow: 'var(--shadow-sm)' }}
+        >
           ⌫
         </button>
       </div>
-      <button onClick={confirm} className="btn-brand mt-4 rounded-xl px-6 py-2.5 font-extrabold shadow-lg">
+      <button
+        onClick={confirm}
+        className="mt-4 rounded-full px-8 py-3 text-base font-semibold transition-all active:scale-95"
+        style={{
+          background: '#007AFF', color: '#fff',
+          boxShadow: '0 4px 14px rgba(0, 122, 255, 0.25)',
+          border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+        }}
+      >
         تأكيد
       </button>
       {meta.pin && (
-        <p onClick={() => setShowForgotModal(true)} className="mt-4 cursor-pointer text-sm text-[var(--muted)]">
+        <p onClick={() => setShowForgotModal(true)} className="mt-4 cursor-pointer text-sm" style={{ color: 'var(--muted)', fontWeight: 400 }}>
           نسيت الرمز؟ إعادة التعيين
         </p>
       )}
 
-      {/* تأكيد إعادة تعيين PIN */}
       <ConfirmModal
         isOpen={showForgotModal}
         variant="warning"

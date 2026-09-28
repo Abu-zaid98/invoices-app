@@ -135,7 +135,7 @@ export default function PartyStatement({ partyName, onBack, onOpenInvoice }: Pro
             <div
               key={inv.id}
               onClick={() => onOpenInvoice(inv.id)}
-              className="flex cursor-pointer items-center justify-between gap-2 border-b border-[var(--border)] py-2.5 last:border-b-0"
+              className="pressable flex cursor-pointer items-center justify-between gap-2 border-b border-[var(--border)] py-2.5 last:border-b-0"
             >
               <div className="min-w-0">
                 <div className="text-sm font-bold">

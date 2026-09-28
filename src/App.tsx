@@ -98,7 +98,23 @@ function Shell() {
   }, [invoices])
 
   if (!loaded) {
-    return <div className="flex min-h-screen items-center justify-center text-[var(--muted)]">جارِ التحميل...</div>
+    return (
+      <div className="mx-auto flex min-h-screen max-w-[540px] flex-col gap-3 px-4" style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))' }}>
+        <div className="flex items-center gap-2.5">
+          <div className="skeleton" style={{ width: 42, height: 42, borderRadius: 13 }} />
+          <div className="flex-1">
+            <div className="skeleton mb-2" style={{ width: '40%', height: 20 }} />
+            <div className="skeleton" style={{ width: '60%', height: 12 }} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="skeleton" style={{ height: 120 }} />
+          <div className="skeleton" style={{ height: 120 }} />
+        </div>
+        <div className="skeleton" style={{ height: 90 }} />
+        <div className="skeleton" style={{ height: 180 }} />
+      </div>
+    )
   }
 
   if (!unlocked) {
@@ -167,23 +183,10 @@ function Shell() {
   }
 
   function toggleTheme() {
-    if (meta.theme === 'light') {
-      let dark: 'gold' | 'blue' = 'gold'
-      try {
-        const saved = localStorage.getItem('fawateeri-dark-theme')
-        if (saved === 'blue' || saved === 'gold') dark = saved
-      } catch {
-        /* ignore */
-      }
-      updateMeta('theme', dark).then(() => toast('تم التبديل للوضع الداكن 🌙'))
-    } else {
-      try {
-        localStorage.setItem('fawateeri-dark-theme', meta.theme)
-      } catch {
-        /* ignore */
-      }
-      updateMeta('theme', 'light').then(() => toast('تم التبديل للوضع الفاتح ☀️'))
-    }
+    const next = meta.theme === 'light' ? 'dark' : 'light'
+    updateMeta('theme', next).then(() =>
+      toast(next === 'light' ? 'تم التبديل للوضع الفاتح ☀️' : 'تم التبديل للوضع الداكن 🌙'),
+    )
   }
 
   const today = todayLabel()
@@ -248,39 +251,47 @@ function Shell() {
 
   return (
     <div
-      className="mx-auto max-w-[540px] px-4 pb-28 pt-5"
-      style={{ paddingTop: 'calc(1.25rem + env(safe-area-inset-top, 0px))' }}
+      className="mx-auto max-w-[540px] px-4 pb-28"
+      style={{ paddingTop: 'calc(74px + env(safe-area-inset-top, 0px))' }}
     >
-      <div className="mb-3 flex justify-center">
-        <OnlineIndicator />
-      </div>
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-black brand-text">فواتيري</h2>
-          <div className="mt-0.5 flex items-center gap-1.5 text-xs text-[var(--muted)]">
-            <span>📅</span>
-            <span className="font-bold text-[var(--text)]">{today.weekday}</span>
-            <span>·</span>
-            <span>{today.date}</span>
+      <header className="app-header fixed inset-x-0 top-0 z-40">
+        <div
+          className="mx-auto max-w-[540px] px-4"
+          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        >
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-2.5">
+              <span className="app-logo">🧾</span>
+              <div>
+                <h2 className="text-[19px] font-bold leading-tight brand-text" style={{ letterSpacing: '-0.02em' }}>فواتيري</h2>
+                <div className="flex items-center gap-1 text-[11px] leading-tight text-[var(--muted)]">
+                  <span style={{ fontWeight: 600, color: 'var(--text)' }}>{today.weekday}</span>
+                  <span>·</span>
+                  <span>{today.date}</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={toggleTheme}
+                className="icon-btn"
+                title={meta.theme === 'light' ? 'تبديل للوضع الداكن 🌙' : 'تبديل للوضع الفاتح ☀️'}
+              >
+                <span>{meta.theme === 'light' ? '🌙' : '☀️'}</span>
+              </button>
+              <button
+                onClick={() => setShowLogoutModal(true)}
+                className="icon-btn"
+                title="قفل التطبيق وتسجيل الخروج"
+              >
+                <span>🔒</span>
+              </button>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleTheme}
-            className="flex items-center rounded-xl border border-[var(--border)] bg-white/5 px-3 py-1.5 text-base hover:bg-white/10 transition-colors"
-            title={meta.theme === 'light' ? 'تبديل للوضع الداكن 🌙' : 'تبديل للوضع الفاتح ☀️'}
-          >
-            <span>{meta.theme === 'light' ? '🌙' : '☀️'}</span>
-          </button>
-          <button
-            onClick={() => setShowLogoutModal(true)}
-            className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-white/5 px-3 py-1.5 text-xs font-bold text-[var(--muted)] hover:bg-white/10 hover:text-[var(--text)] transition-colors"
-            title="قفل التطبيق وتسجيل الخروج"
-          >
-            <span>🔒</span>
-            <span>قفل</span>
-          </button>
-        </div>
+      </header>
+      <div className="mb-2 flex justify-center empty:hidden">
+        <OnlineIndicator />
       </div>
 
       {route === 'dashboard' && <Dashboard />}

@@ -1,145 +1,168 @@
 @import "tailwindcss";
 
-:root {
+/* ═══════════════════════════════════════════════════════════════════════════
+   APPLE DESIGN SYSTEM — fawateeri · ثيمان فقط: dark + light
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root,
+[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0f1420;
-  --bg2: #131a2b;
-  --card: rgba(255, 255, 255, 0.06);
-  --text: #eef2f8;
-  --muted: #8b96ab;
-  --brand: #ffb020;
-  --brand2: #ff7a3d;
-  --accent: #22c9a3;
-  --accent2: #2e8bff;
-  --danger: #ff5a5f;
-  --border: rgba(255, 255, 255, 0.12);
-  --glow1: rgba(255, 176, 32, 0.10);
-  --glow2: rgba(46, 139, 255, 0.10);
+  --bg: #000000;
+  --bg2: #0b0b0e;
+  --card: #1c1c1e;
+  --text: #f5f5f7;
+  --muted: #98989d;
+  --brand: #0a84ff;
+  --brand2: #5e5ce7;
+  --accent: #30d158;
+  --accent2: #64d2ff;
+  --danger: #ff453a;
+  --border: rgba(255, 255, 255, 0.1);
+  --separator: rgba(255, 255, 255, 0.12);
+  --glow1: rgba(10, 132, 255, 0.1);
+  --glow2: rgba(94, 92, 231, 0.08);
+  --header-bg: rgba(0, 0, 0, 0.72);
+  --chip: rgba(255, 255, 255, 0.06);
+  --brand-chip: linear-gradient(135deg, rgba(10, 132, 255, 0.22), rgba(94, 92, 231, 0.14));
+  --brand-glow: rgba(10, 132, 255, 0.25);
+  --total-bg: rgba(10, 132, 255, 0.08);
+  --total-border: rgba(10, 132, 255, 0.22);
+  --dashed: rgba(255, 255, 255, 0.22);
+  --overlay-soft: rgba(255, 255, 255, 0.04);
+  --chart-grid: rgba(255, 255, 255, 0.15);
+  --ring: rgba(10, 132, 255, 0.28);
+  --tab-active: rgba(10, 132, 255, 0.16);
+  --modal-bg: rgba(28, 28, 30, 0.94);
+  --modal-field: rgba(255, 255, 255, 0.07);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 24px 80px rgba(0, 0, 0, 0.55);
+  --shadow-brand: 0 4px 16px rgba(10, 132, 255, 0.35);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
 }
 
-[data-theme="blue"] {
-  --brand: #2e8bff;
-  --brand2: #8b5cf6;
-  --accent: #00d4ff;
-  --accent2: #8b5cf6;
-  --glow1: rgba(46, 139, 255, 0.12);
-  --glow2: rgba(139, 92, 246, 0.12);
-}
-
-/* ─── Light theme (white) ────────────────────────────────────────────────── */
 [data-theme="light"] {
-  --bg: #f3f5fa;
-  --bg2: #e6ebf4;
-  --card: rgba(255, 255, 255, 0.92);
-  --text: #16213a;
-  --muted: #64748b;
-  --brand: #b45309;
-  --brand2: #ea580c;
-  --accent: #0d9488;
-  --accent2: #2563eb;
-  --danger: #dc2626;
-  --border: rgba(15, 23, 42, 0.13);
-  --glow1: rgba(217, 119, 6, 0.07);
-  --glow2: rgba(37, 99, 235, 0.07);
+  color-scheme: light;
+  --bg: #f2f2f7;
+  --bg2: #ffffff;
+  --card: #ffffff;
+  --text: #1d1d1f;
+  --muted: #8e8e93;
+  --brand: #007aff;
+  --brand2: #5856d6;
+  --accent: #34c759;
+  --accent2: #007aff;
+  --danger: #ff3b30;
+  --border: rgba(0, 0, 0, 0.07);
+  --separator: rgba(0, 0, 0, 0.08);
+  --glow1: rgba(0, 122, 255, 0.06);
+  --glow2: rgba(88, 86, 214, 0.05);
+  --header-bg: rgba(242, 242, 247, 0.72);
+  --chip: rgba(0, 0, 0, 0.04);
+  --brand-chip: linear-gradient(135deg, rgba(0, 122, 255, 0.13), rgba(88, 86, 214, 0.09));
+  --brand-glow: rgba(0, 122, 255, 0.18);
+  --total-bg: rgba(0, 122, 255, 0.07);
+  --total-border: rgba(0, 122, 255, 0.18);
+  --dashed: rgba(0, 0, 0, 0.2);
+  --overlay-soft: rgba(0, 0, 0, 0.03);
+  --chart-grid: rgba(0, 0, 0, 0.08);
+  --ring: rgba(0, 122, 255, 0.18);
+  --tab-active: rgba(0, 122, 255, 0.12);
+  --modal-bg: rgba(255, 255, 255, 0.94);
+  --modal-field: rgba(0, 0, 0, 0.045);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 24px 80px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-brand: 0 4px 14px rgba(0, 122, 255, 0.3);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
 }
 
-[data-theme="light"] .card {
-  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.07);
-  backdrop-filter: none;
+/* ألوان tailwind الفاتحة → درجات مقروءة في الوضع الفاتح */
+[data-theme="light"] .text-emerald-400,
+[data-theme="light"] .text-emerald-300 {
+  color: #059669;
+}
+[data-theme="light"] .text-red-400,
+[data-theme="light"] .text-red-300 {
+  color: #dc2626;
+}
+[data-theme="light"] .text-amber-400 {
+  color: #b45309;
+}
+[data-theme="light"] .text-violet-300 {
+  color: #7c3aed;
 }
 
-[data-theme="light"] .btn-brand {
-  color: #fff;
-}
-
-/* translucent dark surfaces → soft gray on light theme */
+/* أسطح شفافة داكنة → رمادية ناعمة في الفاتح */
 [data-theme="light"] .bg-black\/20 {
-  background-color: rgba(15, 23, 42, 0.05);
+  background-color: rgba(0, 0, 0, 0.045);
 }
-
 [data-theme="light"] .bg-black\/10 {
-  background-color: rgba(15, 23, 42, 0.04);
+  background-color: rgba(0, 0, 0, 0.035);
 }
-
 [data-theme="light"] .bg-white\/5 {
-  background-color: rgba(15, 23, 42, 0.05);
+  background-color: rgba(0, 0, 0, 0.035);
 }
-
+[data-theme="light"] .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.06);
+}
 [data-theme="light"] .hover\:bg-white\/10:hover {
-  background-color: rgba(15, 23, 42, 0.09);
+  background-color: rgba(0, 0, 0, 0.06);
 }
-
 [data-theme="light"] .hover\:bg-white\/5:hover {
-  background-color: rgba(15, 23, 42, 0.06);
-}
-
-/* custom Select + drop menus adapt to light theme */
-[data-theme="light"] .select-box {
-  background: linear-gradient(160deg, #ffffff, #eef1f7);
-  color: var(--text);
-}
-
-[data-theme="light"] .drop-menu {
-  background: linear-gradient(165deg, #ffffff, #eef1f7);
-  border-color: rgba(180, 83, 9, 0.3);
-  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.18);
-}
-
-[data-theme="light"] .drop-item:hover {
-  background: linear-gradient(90deg, rgba(217, 119, 6, 0.12), rgba(234, 88, 12, 0.07));
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 html, body, #root { height: 100%; }
 
-/* iOS: إزالة وميض اللمس + منع تأخير النقر المزدوج */
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  touch-action: manipulation;
-}
-
-/* ─── Bottom nav: theme-aware with fallback for old iOS (no color-mix) ───────── */
-.bottom-nav {
-  background: var(--bg2);
-}
-
-@supports (background: color-mix(in srgb, red 50%, blue)) {
-  .bottom-nav {
-    background: color-mix(in srgb, var(--bg2) 88%, transparent);
-  }
-}
-
-/* ─── Custom dark Select ─────────────────────────────────────────────────── */
-
-body {
   margin: 0;
   color: var(--text);
-  font-family: 'Cairo', 'Segoe UI', 'Tahoma', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Cairo, "Segoe UI", Tahoma, sans-serif;
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  /* إضاءة هادئة: توهج واحد علوي ثابت + تظليل سفلي خفيف — بلا تكرار مع التمرير */
   background-color: var(--bg);
   background-image:
-    radial-gradient(820px 420px at 50% -180px, var(--glow1), transparent 65%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(0, 0, 0, 0.22)),
+    radial-gradient(900px 480px at 50% -180px, var(--glow1), transparent 65%),
     linear-gradient(180deg, var(--bg), var(--bg2));
   background-repeat: no-repeat;
   background-attachment: fixed;
+  touch-action: manipulation;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* ─── Cards ────────────────────────────────────────────────────────────────── */
 .card {
   background: var(--card);
-  backdrop-filter: blur(14px);
-  border: 1px solid var(--border);
-  border-radius: 18px;
+  border: 0.5px solid var(--separator);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.15s ease, background-color 0.3s ease;
 }
 
+[data-theme="dark"] .card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 40%), var(--card);
+}
+
+/* ─── Brand text / buttons ─────────────────────────────────────────────────── */
 .brand-text {
-  background: linear-gradient(90deg, var(--brand), var(--brand2));
+  background: linear-gradient(135deg, var(--brand), var(--brand2));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -147,20 +170,143 @@ body {
 
 .btn-brand {
   background: linear-gradient(135deg, var(--brand), var(--brand2));
-  color: #1a1200;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: var(--shadow-brand);
+  transition: filter 0.15s ease, transform 0.12s ease, box-shadow 0.2s ease;
+}
+.btn-brand:hover {
+  filter: brightness(1.07);
+}
+.btn-brand:active {
+  transform: scale(0.98);
 }
 
 .accent-text {
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* ─── App header (fixed glass, compact) ────────────────────────────────────── */
+.app-header {
+  background: var(--header-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 0.5px solid var(--separator);
 }
 
+.app-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  font-size: 22px;
+  background: linear-gradient(135deg, var(--brand), var(--brand2));
+  box-shadow: var(--shadow-brand);
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 0.5px solid var(--separator);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.12s ease, background-color 0.2s ease;
+  font-size: 16px;
+}
+.icon-btn:active {
+  transform: scale(0.92);
+}
+
+/* ─── Bottom nav ───────────────────────────────────────────────────────────── */
+.bottom-nav {
+  background: var(--header-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.tab-active {
+  background: var(--tab-active) !important;
+}
+
+/* ─── Stat icon chips ──────────────────────────────────────────────────────── */
+.stat-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 17px;
+  font-size: 24px;
+  margin-bottom: 8px;
+  box-shadow: inset 0 0 0 0.5px rgba(127, 127, 137, 0.25);
+}
+.stat-ic.g-green { background: rgba(52, 199, 89, 0.15); }
+.stat-ic.g-red { background: rgba(255, 59, 48, 0.13); }
+.stat-ic.g-amber { background: rgba(255, 149, 0, 0.15); }
+.stat-ic.g-blue { background: rgba(0, 122, 255, 0.13); }
+.stat-ic.g-violet { background: rgba(139, 92, 246, 0.15); }
+
+/* ─── Theme picker cards ───────────────────────────────────────────────────── */
+.theme-card {
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--separator);
+  background: var(--card);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
+}
+.theme-card:active {
+  transform: scale(0.98);
+}
+.theme-card[data-active="true"] {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+/* ─── Pressable rows ───────────────────────────────────────────────────────── */
+.pressable {
+  transition: transform 0.12s ease, background-color 0.15s ease;
+}
+.pressable:active {
+  transform: scale(0.995);
+}
+
+/* ─── Skeleton shimmer ─────────────────────────────────────────────────────── */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--chip);
+  border-radius: var(--radius-md);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(127, 127, 137, 0.18), transparent);
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  from { transform: translateX(100%); }
+  to { transform: translateX(-100%); }
+}
+
+/* ─── Form focus ───────────────────────────────────────────────────────────── */
+:is(input, textarea, select):focus-visible {
+  outline: none;
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 3px var(--ring) !important;
+}
+
+/* ─── Custom Select ────────────────────────────────────────────────────────── */
 .select-wrap {
   position: relative;
   display: block;
@@ -171,68 +317,77 @@ body {
   width: 100%;
   appearance: none;
   -webkit-appearance: none;
-  background: linear-gradient(160deg, #1a2340, #10182c);
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
+  background: var(--card);
+  border: 0.5px solid var(--separator);
+  border-radius: var(--radius-md);
   color: var(--text);
   font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
-  padding: 10px 36px 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  padding: 12px 40px 12px 14px;
   outline: none;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
   transition: border-color 0.18s, box-shadow 0.18s;
 }
 
 .select-box:hover {
-  border-color: rgba(255, 176, 32, 0.45);
+  border-color: var(--brand);
 }
 
 .select-box:focus {
   border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(255, 176, 32, 0.18), 0 4px 16px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 0 4px var(--ring);
 }
 
 .select-box option {
-  background-color: #1a2340;
-  color: #eef2f8;
-  font-weight: 500;
+  background-color: var(--card);
+  color: var(--text);
+  font-weight: 400;
+}
+
+[data-theme="dark"] .select-box option {
+  background-color: #1c1c1e;
+  color: #f5f5f7;
 }
 
 .select-chevron {
   position: absolute;
   top: 50%;
-  right: 12px;
+  right: 14px;
   transform: translateY(-50%);
-  color: var(--brand);
+  color: var(--muted);
   pointer-events: none;
-  transition: transform 0.18s;
+  transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1), color 0.2s;
 }
 
 .select-wrap:focus-within .select-chevron {
   transform: translateY(-50%) rotate(180deg);
+  color: var(--brand);
 }
 
-/* ─── Date inputs on dark theme ──────────────────────────────────────────── */
+/* ─── Date inputs ──────────────────────────────────────────────────────────── */
 input[type="date"] {
-  color-scheme: dark;
+  font-family: inherit;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
-  opacity: 0.65;
+  opacity: 0.55;
   cursor: pointer;
-  border-radius: 4px;
-  padding: 2px;
+  border-radius: 6px;
+  padding: 3px;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
-  background: rgba(255, 176, 32, 0.15);
+  background: var(--tab-active);
 }
 
-/* ─── Autocomplete drop menus ────────────────────────────────────────────── */
+/* ─── Autocomplete drop menus ──────────────────────────────────────────────── */
 @keyframes dropDown {
-  from { opacity: 0; transform: translateY(-5px) scale(0.99); }
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -243,13 +398,19 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   z-index: 20;
   margin-top: 6px;
   overflow: hidden;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 176, 32, 0.28);
-  background: linear-gradient(165deg, #1c2547, #10182c);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55), 0 0 20px rgba(255, 176, 32, 0.07);
-  animation: dropDown 0.16s ease;
-  max-height: 220px;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--separator);
+  background: var(--card);
+  box-shadow: var(--shadow-lg);
+  animation: dropDown 0.18s cubic-bezier(0.25, 0.1, 0.25, 1);
+  max-height: 240px;
   overflow-y: auto;
+}
+
+[data-theme="dark"] .drop-menu {
+  background: rgba(28, 28, 30, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
 .drop-item {
@@ -257,17 +418,19 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 10px;
+  padding: 12px 16px;
   text-align: right;
-  font-size: 13.5px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   color: var(--text);
   background: transparent;
   border: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 0.5px solid var(--separator);
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.12s;
+  transition: background 0.12s ease;
 }
 
 .drop-item:last-child {
@@ -275,20 +438,63 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .drop-item:hover {
-  background: linear-gradient(90deg, rgba(255, 176, 32, 0.16), rgba(255, 122, 61, 0.08));
+  background: var(--tab-active);
 }
 
 .drop-item .sub {
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 400;
   color: var(--muted);
   white-space: nowrap;
 }
 
+/* ─── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--separator);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* ─── Animations ───────────────────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ─── Print ────────────────────────────────────────────────────────────────── */
 @media print {
   body * { visibility: hidden; }
   #invoice-print-area, #invoice-print-area * { visibility: visible; }
   #invoice-print-area {
     position: absolute; top: 0; left: 0; width: 100%;
     background: #fff !important; color: #111 !important; box-shadow: none; border: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

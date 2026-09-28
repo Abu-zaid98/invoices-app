@@ -38,6 +38,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     ;(async () => {
       const [m, inv, tr] = await Promise.all([getMeta(), getAllInvoices(), getTrash()])
+      // ترحيل الثيمات القديمة (gold/blue) إلى النظام الجديد (dark/light)
+      if (m.theme !== 'dark' && m.theme !== 'light') {
+        m.theme = 'dark'
+        setMetaField('theme', 'dark').catch(() => {})
+      }
       setMeta(m)
       // ترحيل الفواتير القديمة لحقول الدفع + حفظها لتوحيد المخزن
       const normalized = inv.map(normalizeInvoice)
@@ -131,6 +136,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }
 
   async function importAll(data: { meta: Meta; invoices: Invoice[] }) {
+    if (data.meta.theme !== 'dark' && data.meta.theme !== 'light') {
+      data.meta.theme = 'dark'
+    }
     const normalized = data.invoices.map(normalizeInvoice)
     await setMetaAll(data.meta)
     await replaceAllInvoices(normalized)

@@ -210,24 +210,34 @@ export default function Settings({ onLocked }: { onLocked: () => void }) {
         <h3 className="mb-3 font-bold">🎨 المظهر</h3>
         <div className="flex gap-2.5">
           {([
-            { id: 'gold', name: 'ذهبي 🌙', bg: 'linear-gradient(135deg,#ffb020,#ff7a3d)' },
-            { id: 'blue', name: 'أزرق ليلي 🌙', bg: 'linear-gradient(135deg,#2e8bff,#8b5cf6)' },
-            { id: 'light', name: 'فاتح ☀️', bg: 'linear-gradient(135deg,#ffffff,#94a3b8)' },
-          ] as const).map((t) => (
-            <div
-              key={t.id}
-              onClick={() => updateMeta('theme', t.id).then(() => toast('تم تغيير المظهر'))}
-              className={`flex-1 cursor-pointer rounded-2xl border-2 p-3.5 text-center text-sm font-bold ${
-                meta.theme === t.id ? 'border-[var(--brand)] text-[var(--brand)]' : 'border-[var(--border)] text-[var(--muted)]'
-              }`}
-            >
+            { id: 'dark', name: 'داكن', icon: '🌙', bg: '#1c1c1e', bar: '#0A84FF', dot: '#0A84FF' },
+            { id: 'light', name: 'فاتح', icon: '☀️', bg: '#ffffff', bar: '#007AFF', dot: '#FF9F0A' },
+          ] as const).map((t) => {
+            const active = meta.theme === t.id
+            return (
               <div
-                className="mb-1.5 h-7 w-full rounded-lg border border-black/10"
-                style={{ background: t.bg }}
-              />
-              {t.name}
-            </div>
-          ))}
+                key={t.id}
+                onClick={() => updateMeta('theme', t.id).then(() => toast('تم تغيير المظهر'))}
+                className="theme-card flex-1 cursor-pointer p-3 text-center"
+                data-active={active}
+              >
+                <div
+                  className="mx-auto mb-2 flex h-16 w-full flex-col justify-between overflow-hidden rounded-xl p-2"
+                  style={{ background: t.bg, border: '0.5px solid var(--separator)', boxShadow: 'var(--shadow-sm)' }}
+                >
+                  <div className="h-1.5 w-2/3 rounded-full" style={{ background: t.bar }} />
+                  <div className="flex items-center gap-1">
+                    <span className="inline-block h-3 w-3 rounded-full" style={{ background: t.dot }} />
+                    <span className="inline-block h-1.5 w-1/2 rounded-full" style={{ background: 'var(--muted)', opacity: 0.4 }} />
+                  </div>
+                </div>
+                <div className="text-sm font-bold" style={{ color: active ? 'var(--brand)' : 'var(--muted)' }}>
+                  {t.icon} {t.name}
+                </div>
+                {active && <div className="mx-auto mt-1.5 h-1 w-8 rounded-full" style={{ background: 'var(--brand)' }} />}
+              </div>
+            )
+          })}
         </div>
       </div>
 

@@ -307,7 +307,7 @@ function SwipeRow({
           if (dx < -48) onToggle(inv.id)
           else if (dx > 48 || open) onToggle(null)
         }}
-        className="flex cursor-pointer items-center justify-between py-3"
+        className="pressable flex cursor-pointer items-center justify-between py-3"
       >
         <div>
           <div className="font-semibold">{inv.party}</div>

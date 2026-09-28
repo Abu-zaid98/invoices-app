@@ -171,7 +171,7 @@ export default function InvoiceDetail({ invoiceId, onBack, onEdit, onDuplicate, 
             onClick={() => setShowExport(true)}
             className="btn-brand rounded-xl px-5 py-2 text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity"
             style={{
-              boxShadow: '0 4px 16px rgba(255,176,32,0.3)',
+              boxShadow: 'var(--shadow-brand)',
             }}
           >
             <span>⬇️</span>
@@ -296,8 +296,8 @@ export default function InvoiceDetail({ invoiceId, onBack, onEdit, onDuplicate, 
         {/* Totals breakdown */}
         <div className="relative z-10 mt-5 flex justify-end">
           <div
-            className="w-full max-w-64 rounded-2xl border border-[var(--border)] px-6 py-4"
-            style={{ background: 'rgba(255,176,32,0.07)' }}
+            className="w-full max-w-64 rounded-2xl px-6 py-4"
+            style={{ background: 'var(--total-bg)', border: '1px solid var(--total-border)' }}
           >
             <div className="flex justify-between text-xs text-[var(--muted)]">
               <span>المجموع الفرعي</span>
@@ -357,7 +357,7 @@ export default function InvoiceDetail({ invoiceId, onBack, onEdit, onDuplicate, 
         )}
 
         {/* Payment status card */}
-        <div className="relative z-10 mt-4 rounded-2xl border border-[var(--border)] p-4" style={{ background: 'rgba(255,255,255,0.03)' }}>
+        <div className="relative z-10 mt-4 rounded-2xl border border-[var(--border)] p-4" style={{ background: 'var(--overlay-soft)' }}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span
               className={`rounded-full px-3 py-1 text-xs font-bold ${

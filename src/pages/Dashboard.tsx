@@ -57,45 +57,45 @@ export default function Dashboard() {
         </div>
       )}
       {/* Debts row */}
-      <div className="mb-2 grid grid-cols-2 gap-2.5">
-        <div className="card border-emerald-500/25 p-4 text-center shadow-lg">
-          <div className="text-2xl">💰</div>
+      <div className="mb-2.5 grid grid-cols-2 gap-2.5">
+        <div className="card p-4 text-center">
+          <div className="stat-ic g-green">💰</div>
           <div className="text-lg font-black text-emerald-400">
             {receivable.toLocaleString('en-US')} {currencySymbol(dispCur)}
           </div>
-          <div className="text-xs text-[var(--muted)]">مستحق لك (ديون العملاء)</div>
+          <div className="mt-0.5 text-xs text-[var(--muted)]">مستحق لك (ديون العملاء)</div>
         </div>
-        <div className="card border-red-500/25 p-4 text-center shadow-lg">
-          <div className="text-2xl">🧾</div>
+        <div className="card p-4 text-center">
+          <div className="stat-ic g-red">🧾</div>
           <div className="text-lg font-black text-red-400">
             {payable.toLocaleString('en-US')} {currencySymbol(dispCur)}
           </div>
-          <div className="text-xs text-[var(--muted)]">مستحق عليك (ديون الموردين)</div>
+          <div className="mt-0.5 text-xs text-[var(--muted)]">مستحق عليك (ديون الموردين)</div>
         </div>
       </div>
       <div className="mb-2 grid grid-cols-2 gap-2.5">
-        <div className="card p-4 text-center shadow-lg">
-          <div className="text-2xl">📥</div>
+        <div className="card p-4 text-center">
+          <div className="stat-ic g-amber">📥</div>
           <div className="accent-text text-xl font-black">{purchases.length}</div>
           <div className="text-xs text-[var(--muted)]">فواتير الشراء</div>
           <div className="mt-1 text-sm font-bold">
             {totalPurchase.toLocaleString('en-US')} {currencySymbol(dispCur)}
           </div>
         </div>
-        <div className="card p-4 text-center shadow-lg">
-          <div className="text-2xl">📤</div>
+        <div className="card p-4 text-center">
+          <div className="stat-ic g-blue">📤</div>
           <div className="accent-text text-xl font-black">{sales.length}</div>
           <div className="text-xs text-[var(--muted)]">فواتير البيع</div>
           <div className="mt-1 text-sm font-bold">
             {totalSale.toLocaleString('en-US')} {currencySymbol(dispCur)}
           </div>
         </div>
-        <div className="card col-span-2 flex flex-col items-center p-4 text-center shadow-lg">
-          <div className="text-2xl">💰</div>
+        <div className="card col-span-2 flex flex-col items-center p-5 text-center">
+          <div className="stat-ic g-violet">💰</div>
           <div className="accent-text text-2xl font-black">
             {(totalSale - totalPurchase).toLocaleString('en-US')} {currencySymbol(dispCur)}
           </div>
-          <div className="text-xs text-[var(--muted)]">هامش الربح التقديري</div>
+          <div className="mt-0.5 text-xs text-[var(--muted)]">هامش الربح التقديري</div>
         </div>
       </div>
       {mixedCur && (

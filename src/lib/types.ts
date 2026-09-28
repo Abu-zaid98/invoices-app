@@ -75,7 +75,7 @@ export interface Meta {
   currency: string
   currencies: string[]
   rates: Record<string, number> // value of 1 unit in ILS terms
-  theme: 'gold' | 'blue' | 'light'
+  theme: 'dark' | 'light'
   company: CompanyInfo
   nextId: number
   /** نسخ احتياطي تلقائي: إيقاف / أسبوعي / شهري */
@@ -95,7 +95,7 @@ export const DEFAULT_META: Meta = {
   currency: 'ILS',
   currencies: ['ILS', 'USD', 'JOD', 'EUR'],
   rates: { ILS: 1, USD: 3.7, JOD: 5.2, EUR: 4.0 },
-  theme: 'gold',
+  theme: 'dark',
   company: { name: '' },
   nextId: 1,
   autoBackup: 'weekly',

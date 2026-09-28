@@ -54,7 +54,7 @@ export function buildInvoiceHTML(inv: Invoice, meta: Meta, qrDataUrl = ''): stri
   const classic = meta.printTemplate === 'classic'
   const p = classic
     ? { primary: '#6b7280', primaryLight: '#9ca3af', primaryDark: '#111827', accent: '#374151', glow1: 'transparent', glow2: 'transparent' }
-    : meta.theme === 'blue' ? PALETTES.blue : PALETTES.gold
+    : PALETTES.gold
   const sym = currencySymbol(inv.currency)
   const company = meta.company.name || 'اسم الشركة'
   const num = String(inv.id).padStart(4, '0')

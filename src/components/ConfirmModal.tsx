@@ -14,22 +14,22 @@ interface Props {
 
 const VARIANTS = {
   danger: {
-    iconBg: 'linear-gradient(135deg,rgba(220,38,38,.3),rgba(185,28,28,.2))',
-    iconBorder: 'rgba(220,38,38,.45)',
-    btnBg: 'linear-gradient(135deg,#991b1b,#dc2626)',
-    btnShadow: 'rgba(220,38,38,.35)',
+    iconBg: 'rgba(255, 59, 48, 0.12)',
+    iconBorder: 'rgba(255, 59, 48, 0.3)',
+    btnBg: '#FF3B30',
+    btnShadow: 'rgba(255, 59, 48, 0.25)',
   },
   warning: {
-    iconBg: 'linear-gradient(135deg,rgba(217,119,6,.3),rgba(180,83,9,.2))',
-    iconBorder: 'rgba(245,158,11,.45)',
-    btnBg: 'linear-gradient(135deg,#92400e,#d97706)',
-    btnShadow: 'rgba(245,158,11,.3)',
+    iconBg: 'rgba(255, 149, 0, 0.12)',
+    iconBorder: 'rgba(255, 149, 0, 0.3)',
+    btnBg: '#FF9500',
+    btnShadow: 'rgba(255, 149, 0, 0.25)',
   },
   info: {
-    iconBg: 'linear-gradient(135deg,rgba(37,99,235,.3),rgba(29,78,216,.2))',
-    iconBorder: 'rgba(59,130,246,.45)',
-    btnBg: 'linear-gradient(135deg,#1e3a8a,#2563eb)',
-    btnShadow: 'rgba(59,130,246,.3)',
+    iconBg: 'rgba(0, 122, 255, 0.12)',
+    iconBorder: 'rgba(0, 122, 255, 0.3)',
+    btnBg: '#007AFF',
+    btnShadow: 'rgba(0, 122, 255, 0.25)',
   },
 }
 
@@ -44,7 +44,6 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: Props) {
-  // Esc للإغلاق + منع تمرير الخلفية أثناء فتح المودال
   useEffect(() => {
     if (!isOpen) return
     const onKey = (e: KeyboardEvent) => {
@@ -65,137 +64,86 @@ export default function ConfirmModal({
 
   return (
     <>
-      {/* Backdrop */}
       <div
         onClick={onCancel}
         style={{
           position: 'fixed', inset: 0, zIndex: 60,
-          background: 'rgba(0,0,0,0.72)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          animation: 'fadeIn .18s ease',
+          background: 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          animation: 'fadeIn .2s ease',
         }}
       />
-
-      {/* Dialog */}
       <div
         role="alertdialog"
         aria-modal="true"
         aria-label={title}
+        onClick={(e) => e.stopPropagation()}
         style={{
-          position: 'fixed',
-          top: '50%', left: '50%',
+          position: 'fixed', top: '50%', left: '50%',
           transform: 'translate(-50%,-50%)',
           zIndex: 61,
-          width: 'calc(100% - 40px)',
-          maxWidth: 380,
-          background: 'linear-gradient(160deg,#16213a,#0d1526)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 24,
-          padding: '32px 24px 24px',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
-          animation: 'confirmSlideUp .22s cubic-bezier(.34,1.56,.64,1)',
+          width: 'calc(100% - 48px)', maxWidth: 340,
+          background: 'var(--modal-bg)',
+          backdropFilter: 'blur(40px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+          border: '0.5px solid var(--separator)',
+          borderRadius: '20px',
+          padding: '28px 20px 20px',
+          boxShadow: '0 24px 80px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08)',
+          animation: 'scaleIn .25s cubic-bezier(0.34, 1.56, 0.64, 1)',
           textAlign: 'center',
           direction: 'rtl',
         }}
-        onClick={(e) => e.stopPropagation()}
       >
-        {/* Icon bubble */}
         <div style={{
-          width: 72, height: 72,
-          borderRadius: '50%',
+          width: 56, height: 56, borderRadius: '50%', margin: '0 auto 14px',
           background: v.iconBg,
-          border: `1.5px solid ${v.iconBorder}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 32,
-          margin: '0 auto 18px',
-          boxShadow: `0 8px 24px ${v.btnShadow}`,
+          border: `1px solid ${v.iconBorder}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26,
         }}>
           {icon}
         </div>
-
-        {/* Title */}
         <h3 style={{
-          fontSize: 18, fontWeight: 900,
-          color: '#f0f4ff',
-          marginBottom: 10,
-          lineHeight: 1.3,
+          fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em',
+          color: 'var(--text)', marginBottom: 8, lineHeight: 1.3,
         }}>
           {title}
         </h3>
-
-        {/* Message */}
         <p style={{
-          fontSize: 13.5, color: '#8b96ab',
-          lineHeight: 1.7,
-          marginBottom: 28,
-          padding: '0 8px',
+          fontSize: 13, color: 'var(--muted)', fontWeight: 400,
+          lineHeight: 1.6, marginBottom: 24, padding: '0 4px',
           whiteSpace: 'pre-line',
         }}>
           {message}
         </p>
-
-        {/* Buttons */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {/* Confirm */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <button
-            // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
             onClick={onConfirm}
             style={{
-              width: '100%',
-              padding: '14px',
-              borderRadius: 14,
-              border: 'none',
-              background: v.btnBg,
-              color: '#fff',
-              fontSize: 15,
-              fontWeight: 800,
-              cursor: 'pointer',
-              boxShadow: `0 6px 20px ${v.btnShadow}`,
-              fontFamily: 'inherit',
-              transition: 'opacity .15s, transform .15s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.opacity = '.88'
-              e.currentTarget.style.transform = 'translateY(-1px)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.opacity = '1'
-              e.currentTarget.style.transform = 'translateY(0)'
+              width: '100%', padding: '12px', borderRadius: '14px', border: 'none',
+              background: v.btnBg, color: '#fff', fontSize: 15, fontWeight: 600,
+              letterSpacing: '-0.01em', cursor: 'pointer',
+              boxShadow: `0 4px 14px ${v.btnShadow}`,
+              fontFamily: 'inherit', transition: 'all 0.15s ease',
             }}
           >
             {confirmLabel}
           </button>
-
-          {/* Cancel */}
           <button
             onClick={onCancel}
             style={{
-              width: '100%',
-              padding: '13px',
-              borderRadius: 14,
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)',
-              color: '#8b96ab',
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              transition: 'background .15s',
+              width: '100%', padding: '12px', borderRadius: '14px',
+              border: '0.5px solid var(--separator)', background: 'var(--modal-field)',
+              color: 'var(--text)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
+              fontFamily: 'inherit', transition: 'all 0.15s ease',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
           >
             {cancelLabel}
           </button>
         </div>
       </div>
-
-      <style>{`
-        @keyframes fadeIn  { from { opacity:0 } to { opacity:1 } }
-        @keyframes confirmSlideUp { from { opacity:0; transform:translate(-50%,-44%) } to { opacity:1; transform:translate(-50%,-50%) } }
-      `}</style>
     </>
   )
 }

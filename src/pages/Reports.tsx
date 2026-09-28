@@ -369,8 +369,8 @@ function MonthlyChart({ currency }: { currency: string }) {
   if (invoices.length === 0) return <p className="text-[var(--muted)]">لا توجد فواتير بعد</p>
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-xl bg-white/5" style={{ direction: 'ltr' }}>
-        <line x1={10} y1={base} x2={W - 10} y2={base} stroke="rgba(255,255,255,.2)" />
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-xl bg-black/10" style={{ direction: 'ltr' }}>
+        <line x1={10} y1={base} x2={W - 10} y2={base} strokeWidth={1} style={{ stroke: 'var(--chart-grid)' }} />
         {months.map((x, i) => {
           const cx = 10 + gw * i + gw / 2
           const sh = ((base - 18) * x.sales) / max
@@ -384,7 +384,7 @@ function MonthlyChart({ currency }: { currency: string }) {
               <rect x={cx + 1} y={base - sh} width={bw} height={Math.max(0, sh)} rx={2} fill="#22c9a3" opacity={0.9}>
                 <title>مبيعات {x.label}: {x.sales.toLocaleString('en-US')}</title>
               </rect>
-              <text x={cx} y={H - 8} fill={net < 0 ? '#f87171' : '#8b96ab'} fontSize={9} textAnchor="middle">
+              <text x={cx} y={H - 8} fontSize={9} textAnchor="middle" style={{ fill: 'var(--muted)', fontWeight: net < 0 ? 800 : 400 }}>
                 {x.label}
               </text>
             </g>
@@ -415,20 +415,20 @@ function PriceChart({ points }: { points: { date: number; price: number }[] }) {
   const path = coords.map((c, i) => `${i === 0 ? 'M' : 'L'}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ')
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-xl bg-white/5">
-      <line x1={P} y1={H - P} x2={W - P} y2={H - P} stroke="rgba(255,255,255,.2)" />
-      <path d={path} fill="none" stroke="#2e8bff" strokeWidth={2.5} />
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-xl bg-black/10">
+      <line x1={P} y1={H - P} x2={W - P} y2={H - P} strokeWidth={1} style={{ stroke: 'var(--chart-grid)' }} />
+      <path d={path} fill="none" strokeWidth={2.5} strokeLinecap="round" style={{ stroke: 'var(--brand)' }} />
       {coords.map((c, i) => (
-        <circle key={i} cx={c.x} cy={c.y} r={3.5} fill="#ffb020">
+        <circle key={i} cx={c.x} cy={c.y} r={3.5} style={{ fill: 'var(--brand)' }}>
           <title>
             {points[i].price.toLocaleString('en-US')} — {new Date(points[i].date).toLocaleDateString('en-US')}
           </title>
         </circle>
       ))}
-      <text x={P} y={14} fill="#8b96ab" fontSize={10}>
+      <text x={P} y={14} fontSize={10} style={{ fill: 'var(--muted)' }}>
         أعلى: {max.toLocaleString('en-US')}
       </text>
-      <text x={P} y={H - 6} fill="#8b96ab" fontSize={10}>
+      <text x={P} y={H - 6} fontSize={10} style={{ fill: 'var(--muted)' }}>
         أدنى: {min.toLocaleString('en-US')}
       </text>
     </svg>

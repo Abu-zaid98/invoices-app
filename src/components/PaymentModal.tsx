@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Invoice } from '../lib/types'
-import { currencySymbol, invoiceBalance } from '../lib/types'
+import { currencySymbol } from '../lib/types'
 
 interface Props {
   isOpen: boolean
@@ -9,7 +9,7 @@ interface Props {
   onClose: () => void
 }
 
-/** مودال تسجيل دفعة على فاتورة */
+/** مودال تسجيل دفعة على فاتورة — تصميم Apple */
 export default function PaymentModal({ isOpen, invoice, onConfirm, onClose }: Props) {
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
@@ -39,7 +39,7 @@ export default function PaymentModal({ isOpen, invoice, onConfirm, onClose }: Pr
 
   if (!isOpen) return null
 
-  const remaining = invoiceBalance(invoice)
+  const remaining = Math.max(0, invoice.total - (invoice.paidAmount || 0))
   const sym = currencySymbol(invoice.currency)
 
   function submit(value: number) {
@@ -60,8 +60,10 @@ export default function PaymentModal({ isOpen, invoice, onConfirm, onClose }: Pr
         onClick={onClose}
         style={{
           position: 'fixed', inset: 0, zIndex: 60,
-          background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)', animation: 'fadeIn .18s ease',
+          background: 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          animation: 'fadeIn .2s ease',
         }}
       />
       <div
@@ -69,39 +71,44 @@ export default function PaymentModal({ isOpen, invoice, onConfirm, onClose }: Pr
         onClick={(e) => e.stopPropagation()}
         style={{
           position: 'fixed', top: '50%', left: '50%',
-          transform: 'translate(-50%,-50%)', zIndex: 61,
-          width: 'calc(100% - 40px)', maxWidth: 360,
-          background: 'linear-gradient(160deg,#16213a,#0d1526)',
-          border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24,
-          padding: '28px 22px 22px', boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
-          animation: 'confirmSlideUp .22s cubic-bezier(.34,1.56,.64,1)',
+          transform: 'translate(-50%,-50%)',
+          zIndex: 61,
+          width: 'calc(100% - 48px)', maxWidth: 340,
+          background: 'var(--modal-bg)',
+          backdropFilter: 'blur(40px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+          border: '0.5px solid var(--separator)',
+          borderRadius: '20px',
+          padding: '28px 20px 20px',
+          boxShadow: '0 24px 80px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08)',
+          animation: 'scaleIn .25s cubic-bezier(0.34, 1.56, 0.64, 1)',
           direction: 'rtl', textAlign: 'center',
         }}
       >
         <div style={{
-          width: 60, height: 60, borderRadius: '50%', margin: '0 auto 14px',
-          background: 'linear-gradient(135deg,rgba(34,201,163,.3),rgba(46,139,255,.2))',
-          border: '1.5px solid rgba(34,201,163,.45)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28,
+          width: 56, height: 56, borderRadius: '50%', margin: '0 auto 14px',
+          background: 'rgba(52, 199, 89, 0.12)',
+          border: '1px solid rgba(52, 199, 89, 0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26,
         }}>
           💵
         </div>
-        <h3 style={{ fontSize: 17, fontWeight: 900, color: '#f0f4ff', marginBottom: 6 }}>
+        <h3 style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)', marginBottom: 6 }}>
           تسجيل دفعة
         </h3>
-        <p style={{ fontSize: 12.5, color: '#8b96ab', marginBottom: 4 }}>
+        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 4, fontWeight: 400 }}>
           فاتورة #{String(invoice.id).padStart(4, '0')} — {invoice.party}
         </p>
-        <p style={{ fontSize: 13, color: '#cbd5e1', marginBottom: 16 }}>
-          المتبقي: <b style={{ color: 'var(--brand)' }}>{remaining.toLocaleString('en-US')} {sym}</b>
+        <p style={{ fontSize: 13, color: 'var(--text)', marginBottom: 16, fontWeight: 600 }}>
+          المتبقي: <span style={{ color: '#007AFF' }}>{remaining.toLocaleString('en-US')} {sym}</span>
         </p>
 
         <button
           onClick={() => submit(remaining)}
           style={{
-            width: '100%', padding: '10px', borderRadius: 12, marginBottom: 10,
-            border: '1px solid rgba(34,201,163,0.4)', background: 'rgba(34,201,163,0.1)',
-            color: '#5eead4', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+            width: '100%', padding: '10px', borderRadius: '12px', marginBottom: 10,
+            border: '0.5px solid rgba(0, 122, 255, 0.3)', background: 'rgba(0, 122, 255, 0.08)',
+            color: '#007AFF', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
           ✅ تسديد كامل المتبقي ({remaining.toLocaleString('en-US')} {sym})
@@ -115,10 +122,11 @@ export default function PaymentModal({ isOpen, invoice, onConfirm, onClose }: Pr
           placeholder={`مبلغ الدفعة بـ ${sym}`}
           min={0}
           style={{
-            width: '100%', borderRadius: 12, border: '1px solid var(--border)',
-            background: 'rgba(255,255,255,0.05)', color: 'var(--text)',
-            padding: '12px', fontSize: 15, fontWeight: 700, fontFamily: 'inherit',
+            width: '100%', borderRadius: '12px', border: '0.5px solid var(--separator)',
+            background: 'var(--modal-field)', color: 'var(--text)',
+            padding: '12px 14px', fontSize: 15, fontWeight: 500, fontFamily: 'inherit',
             outline: 'none', textAlign: 'center', boxSizing: 'border-box',
+            boxShadow: 'var(--shadow-sm)',
           }}
         />
         <input
@@ -127,29 +135,32 @@ export default function PaymentModal({ isOpen, invoice, onConfirm, onClose }: Pr
           placeholder="ملاحظة (اختياري: نقداً، تحويل...)"
           maxLength={60}
           style={{
-            width: '100%', borderRadius: 12, border: '1px solid var(--border)',
-            background: 'rgba(255,255,255,0.05)', color: 'var(--text)',
-            padding: '10px 12px', fontSize: 13, fontFamily: 'inherit',
+            width: '100%', borderRadius: '12px', border: '0.5px solid var(--separator)',
+            background: 'var(--modal-field)', color: 'var(--text)',
+            padding: '10px 14px', fontSize: 13, fontFamily: 'inherit',
             outline: 'none', textAlign: 'center', boxSizing: 'border-box', marginTop: 8,
+            boxShadow: 'var(--shadow-sm)',
           }}
         />
         {error && (
           <div style={{
-            marginTop: 8, fontSize: 12.5, fontWeight: 700, color: '#ff8a8e',
-            background: 'rgba(255,90,95,0.1)', border: '1px solid rgba(255,90,95,0.3)',
-            borderRadius: 10, padding: '7px 12px',
+            marginTop: 8, fontSize: 12.5, fontWeight: 500, color: '#FF3B30',
+            background: 'rgba(255, 59, 48, 0.08)', border: '0.5px solid rgba(255, 59, 48, 0.2)',
+            borderRadius: '10px', padding: '8px 12px',
           }}>
             ⚠️ {error}
           </div>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
           <button
             onClick={() => submit(Number(amount))}
             style={{
-              width: '100%', padding: '13px', borderRadius: 14, border: 'none',
-              background: 'linear-gradient(135deg,var(--brand),var(--brand2))',
-              color: '#1a1200', fontSize: 14, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+              width: '100%', padding: '12px', borderRadius: '14px', border: 'none',
+              background: '#007AFF', color: '#fff', fontSize: 15, fontWeight: 600,
+              letterSpacing: '-0.01em', cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(0, 122, 255, 0.25)',
+              fontFamily: 'inherit', transition: 'all 0.15s ease',
             }}
           >
             💾 حفظ الدفعة
@@ -157,19 +168,16 @@ export default function PaymentModal({ isOpen, invoice, onConfirm, onClose }: Pr
           <button
             onClick={onClose}
             style={{
-              width: '100%', padding: '12px', borderRadius: 14,
-              border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)',
-              color: '#8b96ab', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+              width: '100%', padding: '12px', borderRadius: '14px',
+              border: '0.5px solid var(--separator)', background: 'var(--modal-field)',
+              color: 'var(--text)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
+              fontFamily: 'inherit', transition: 'all 0.15s ease',
             }}
           >
             إلغاء
           </button>
         </div>
       </div>
-      <style>{`
-        @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-        @keyframes confirmSlideUp { from { opacity:0; transform:translate(-50%,-44%) } to { opacity:1; transform:translate(-50%,-50%) } }
-      `}</style>
     </>
   )
 }

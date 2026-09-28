@@ -8,9 +8,9 @@ interface Props {
 }
 
 const PEN_COLORS = [
-  { value: '#111827', label: 'أسود' },
-  { value: '#1e40af', label: 'أزرق' },
-  { value: '#0f766e', label: 'أخضر' },
+  { value: '#1D1D1F', label: 'أسود' },
+  { value: '#007AFF', label: 'أزرق' },
+  { value: '#34C759', label: 'أخضر' },
 ]
 
 const PEN_WIDTHS = [2, 3.5, 5]
@@ -30,7 +30,6 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
   const [canUndo, setCanUndo] = useState(false)
   const [error, setError] = useState('')
 
-  // Esc + lock scroll
   useEffect(() => {
     if (!isOpen) return
     const onKey = (e: KeyboardEvent) => {
@@ -45,10 +44,8 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
     }
   }, [isOpen, onClose])
 
-  // Init canvas size + load existing signature for editing
   useEffect(() => {
     if (!isOpen) return
-    // wait a tick so container has width
     const t = setTimeout(() => {
       const canvas = canvasRef.current
       const wrap = wrapRef.current
@@ -71,7 +68,6 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
       if (initialSignature) {
         const img = new Image()
         img.onload = () => {
-          // fit image inside canvas with padding
           const pad = 16
           const scale = Math.min((w - pad * 2) / img.width, (CANVAS_H - pad * 2) / img.height)
           const dw = img.width * scale
@@ -85,7 +81,6 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
     return () => clearTimeout(t)
   }, [isOpen, initialSignature])
 
-  // Apply pen settings live
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -105,11 +100,7 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
 
   function snapshot(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
     try {
-      // store at CSS-pixel size (unscaled) — need to handle dpr transform:
-      // simplest: save full backing store
-      const dpr = window.devicePixelRatio || 1
       const img = ctx.getImageData(0, 0, canvas.width, canvas.height)
-      void dpr
       undoStack.current.push(img)
       if (undoStack.current.length > 30) undoStack.current.shift()
       setCanUndo(true)
@@ -133,7 +124,6 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
     ctx.lineJoin = 'round'
     ctx.beginPath()
     const p = last.current
-    // dot for tap
     ctx.moveTo(p.x, p.y)
     ctx.lineTo(p.x + 0.1, p.y + 0.1)
     ctx.stroke()
@@ -169,7 +159,6 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.putImageData(img, 0, 0)
     ctx.restore()
-    // re-apply dpr scale for future strokes
     const dpr = window.devicePixelRatio || 1
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.strokeStyle = penColor
@@ -195,7 +184,6 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
     setError('')
   }
 
-  /** قص الحواف الشفافة حتى يكون التوقيع مدمجاً ويظهر بحجم مناسب في الفاتورة */
   function trimmedDataURL(): string | null {
     const canvas = canvasRef.current
     if (!canvas) return null
@@ -219,7 +207,7 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
         }
       }
     }
-    if (maxX < 0) return null // blank
+    if (maxX < 0) return null
     const pad = Math.floor(12 * (window.devicePixelRatio || 1))
     minX = Math.max(0, minX - pad)
     minY = Math.max(0, minY - pad)
@@ -254,38 +242,37 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
         onClick={onClose}
         style={{
           position: 'fixed', inset: 0, zIndex: 60,
-          background: 'rgba(0,0,0,0.72)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          animation: 'fadeIn .18s ease',
+          background: 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          animation: 'fadeIn .2s ease',
         }}
       />
       <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="التوقيع بخط اليد"
+        role="dialog" aria-modal="true" aria-label="التوقيع بخط اليد"
         onClick={(e) => e.stopPropagation()}
         style={{
           position: 'fixed', top: '50%', left: '50%',
           transform: 'translate(-50%,-50%)',
           zIndex: 61,
-          width: 'calc(100% - 32px)', maxWidth: 420,
-          background: 'linear-gradient(160deg,#16213a,#0d1526)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 24, padding: '24px 20px 20px',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
-          animation: 'confirmSlideUp .22s cubic-bezier(.34,1.56,.64,1)',
+          width: 'calc(100% - 48px)', maxWidth: 380,
+          background: 'var(--modal-bg)',
+          backdropFilter: 'blur(40px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+          border: '0.5px solid var(--separator)',
+          borderRadius: '20px', padding: '24px 20px 20px',
+          boxShadow: '0 24px 80px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08)',
+          animation: 'scaleIn .25s cubic-bezier(0.34, 1.56, 0.64, 1)',
           direction: 'rtl',
         }}
       >
-        <h3 style={{ fontSize: 17, fontWeight: 900, color: '#f0f4ff', textAlign: 'center', marginBottom: 4 }}>
+        <h3 style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)', textAlign: 'center', marginBottom: 4 }}>
           ✍️ التوقيع بخط اليد
         </h3>
-        <p style={{ fontSize: 12, color: '#8b96ab', textAlign: 'center', marginBottom: 14 }}>
+        <p style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'center', marginBottom: 14, fontWeight: 400 }}>
           وقّع بإصبعك أو بقلم الشاشة داخل المربع الأبيض
         </p>
 
-        {/* Canvas */}
         <div ref={wrapRef} style={{ width: '100%' }}>
           <canvas
             ref={canvasRef}
@@ -295,20 +282,17 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
             onPointerCancel={endStroke}
             onPointerLeave={endStroke}
             style={{
-              display: 'block',
-              width: '100%',
-              height: CANVAS_H,
-              background: '#fff',
-              borderRadius: 16,
-              border: '1.5px dashed rgba(255,176,32,0.5)',
-              touchAction: 'none',
-              cursor: 'crosshair',
+              display: 'block', width: '100%', height: CANVAS_H,
+              background: '#FFFFFF', borderRadius: '14px',
+              border: '0.5px solid var(--separator)',
+              boxShadow: 'var(--shadow-sm)',
+              touchAction: 'none', cursor: 'crosshair',
             }}
           />
         </div>
         {!hasDrawn && (
           <div style={{
-            textAlign: 'center', fontSize: 12, color: 'rgba(0,0,0,0.35)',
+            textAlign: 'center', fontSize: 12, color: 'var(--muted)',
             marginTop: -CANVAS_H + 80, marginBottom: CANVAS_H - 95,
             pointerEvents: 'none', height: 0,
           }}>
@@ -318,15 +302,14 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
 
         {error && (
           <div style={{
-            marginTop: 10, fontSize: 12.5, fontWeight: 700, color: '#ff8a8e',
-            background: 'rgba(255,90,95,0.1)', border: '1px solid rgba(255,90,95,0.3)',
-            borderRadius: 10, padding: '7px 12px', textAlign: 'center',
+            marginTop: 10, fontSize: 12.5, fontWeight: 500, color: '#FF3B30',
+            background: 'rgba(255, 59, 48, 0.08)', border: '0.5px solid rgba(255, 59, 48, 0.2)',
+            borderRadius: '10px', padding: '8px 12px', textAlign: 'center',
           }}>
             ⚠️ {error}
           </div>
         )}
 
-        {/* Pen options */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 14 }}>
           <div style={{ display: 'flex', gap: 6 }}>
             {PEN_COLORS.map((c) => (
@@ -337,9 +320,9 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
                 style={{
                   width: 30, height: 30, borderRadius: '50%',
                   background: c.value,
-                  border: penColor === c.value ? '2.5px solid var(--brand)' : '2px solid rgba(255,255,255,0.2)',
+                  border: penColor === c.value ? '2px solid #007AFF' : '0.5px solid var(--separator)',
                   cursor: 'pointer',
-                  boxShadow: penColor === c.value ? '0 0 10px var(--brand)' : 'none',
+                  boxShadow: penColor === c.value ? '0 0 0 3px rgba(0, 122, 255, 0.15)' : 'none',
                 }}
               />
             ))}
@@ -351,31 +334,29 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
                 onClick={() => setPenWidth(w)}
                 title={`سماكة ${w}`}
                 style={{
-                  width: 34, height: 30, borderRadius: 9,
-                  border: penWidth === w ? '1.5px solid var(--brand)' : '1px solid rgba(255,255,255,0.15)',
-                  background: penWidth === w ? 'rgba(255,176,32,0.15)' : 'rgba(255,255,255,0.05)',
+                  width: 34, height: 30, borderRadius: '10px',
+                  border: penWidth === w ? '1px solid #007AFF' : '0.5px solid var(--separator)',
+                  background: penWidth === w ? 'rgba(0, 122, 255, 0.08)' : 'var(--modal-field)',
                   cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                <span style={{ width: 18, height: w, borderRadius: 99, background: '#fff' }} />
+                <span style={{ width: 18, height: w, borderRadius: 99, background: 'var(--text)' }} />
               </button>
             ))}
           </div>
         </div>
 
-        {/* Actions row */}
         <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
           <button
             onClick={handleUndo}
             disabled={!canUndo}
             style={{
-              flex: 1, padding: '10px', borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.12)',
-              background: 'rgba(255,255,255,0.05)',
-              color: canUndo ? '#cbd5e1' : '#5b6678',
-              fontSize: 13, fontWeight: 700, cursor: canUndo ? 'pointer' : 'default',
-              fontFamily: 'inherit', opacity: canUndo ? 1 : 0.6,
+              flex: 1, padding: '10px', borderRadius: '12px',
+              border: '0.5px solid var(--separator)', background: 'var(--modal-field)',
+              color: canUndo ? 'var(--text)' : 'var(--muted)',
+              fontSize: 13, fontWeight: 500, cursor: canUndo ? 'pointer' : 'default',
+              fontFamily: 'inherit', opacity: canUndo ? 1 : 0.5,
             }}
           >
             ↩️ تراجع
@@ -383,10 +364,9 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
           <button
             onClick={handleClear}
             style={{
-              flex: 1, padding: '10px', borderRadius: 12,
-              border: '1px solid rgba(255,90,95,0.35)',
-              background: 'rgba(255,90,95,0.1)',
-              color: '#ff8a8e', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              flex: 1, padding: '10px', borderRadius: '12px',
+              border: '0.5px solid rgba(255, 59, 48, 0.3)', background: 'rgba(255, 59, 48, 0.06)',
+              color: '#FF3B30', fontSize: 13, fontWeight: 500, cursor: 'pointer',
               fontFamily: 'inherit',
             }}
           >
@@ -394,16 +374,15 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
           </button>
         </div>
 
-        {/* Save / cancel */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
           <button
             onClick={handleSave}
             style={{
-              width: '100%', padding: '14px', borderRadius: 14, border: 'none',
-              background: 'linear-gradient(135deg,var(--brand),var(--brand2))',
-              color: '#1a1200', fontSize: 15, fontWeight: 800, cursor: 'pointer',
-              boxShadow: '0 6px 20px rgba(255,176,32,0.35)',
-              fontFamily: 'inherit',
+              width: '100%', padding: '12px', borderRadius: '14px', border: 'none',
+              background: '#007AFF', color: '#fff', fontSize: 15, fontWeight: 600,
+              letterSpacing: '-0.01em', cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(0, 122, 255, 0.25)',
+              fontFamily: 'inherit', transition: 'all 0.15s ease',
             }}
           >
             💾 حفظ التوقيع
@@ -411,21 +390,16 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
           <button
             onClick={onClose}
             style={{
-              width: '100%', padding: '12px', borderRadius: 14,
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)',
-              color: '#8b96ab', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-              fontFamily: 'inherit',
+              width: '100%', padding: '12px', borderRadius: '14px',
+              border: '0.5px solid var(--separator)', background: 'var(--modal-field)',
+              color: 'var(--text)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
+              fontFamily: 'inherit', transition: 'all 0.15s ease',
             }}
           >
             إلغاء
           </button>
         </div>
       </div>
-      <style>{`
-        @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-        @keyframes confirmSlideUp { from { opacity:0; transform:translate(-50%,-44%) } to { opacity:1; transform:translate(-50%,-50%) } }
-      `}</style>
     </>
   )
 }

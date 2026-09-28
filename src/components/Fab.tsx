@@ -9,7 +9,7 @@ interface Props {
   onDue: () => void
 }
 
-/** زر + عائم (Speed Dial): فاتورة جديدة / لآخر عميل / المستحقات */
+/** زر + عائم (Speed Dial) — تصميم Apple: فاتورة جديدة / لآخر عميل / المستحقات */
 export default function Fab({ hidden, lastPartyName, dueCount, onNew, onLastParty, onDue }: Props) {
   const [open, setOpen] = useState(false)
 
@@ -28,7 +28,6 @@ export default function Fab({ hidden, lastPartyName, dueCount, onNew, onLastPart
 
   return (
     <>
-      {/* Backdrop لإغلاق القائمة */}
       {open && (
         <div
           onClick={() => setOpen(false)}
@@ -48,37 +47,36 @@ export default function Fab({ hidden, lastPartyName, dueCount, onNew, onLastPart
             title={a.label}
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              background: 'linear-gradient(160deg,#1c2547,#10182c)',
-              border: '1px solid rgba(255,176,32,0.35)',
+              background: 'var(--modal-bg)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              border: '0.5px solid var(--separator)',
               borderRadius: 999, padding: '9px 14px 9px 10px',
-              color: '#f0f4ff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer',
-              boxShadow: '0 10px 26px rgba(0,0,0,0.5)',
+              color: 'var(--text)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
               fontFamily: 'inherit', whiteSpace: 'nowrap',
-              animation: 'fabIn .18s cubic-bezier(.34,1.4,.64,1)',
+              animation: 'slideUp .18s cubic-bezier(0.34, 1.4, 0.64, 1)',
             }}
           >
             <span style={{ fontSize: 16 }}>{a.icon}</span>
             <span style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.label}</span>
           </button>
         ))}
-        {/* الزر الرئيسي */}
         <button
           onClick={() => setOpen((o) => !o)}
           aria-label={open ? 'إغلاق القائمة' : 'إجراءات سريعة'}
           style={{
             width: 56, height: 56, borderRadius: '50%', border: 'none', cursor: 'pointer',
-            background: 'linear-gradient(135deg,var(--brand),var(--brand2))',
-            color: '#1a1200', fontSize: 26, fontWeight: 900, lineHeight: 1,
-            boxShadow: '0 10px 28px rgba(255,176,32,0.4)',
+            background: '#007AFF', color: '#fff', fontSize: 26, fontWeight: 400, lineHeight: 1,
+            boxShadow: '0 8px 24px rgba(0, 122, 255, 0.35), 0 2px 8px rgba(0, 122, 255, 0.2)',
             transform: open ? 'rotate(45deg)' : 'rotate(0)',
-            transition: 'transform .2s',
+            transition: 'transform .2s cubic-bezier(0.34, 1.56, 0.64, 1)',
             fontFamily: 'inherit',
           }}
         >
           +
         </button>
       </div>
-      <style>{`@keyframes fabIn { from { opacity:0; transform:translateY(8px) scale(.95) } to { opacity:1; transform:translateY(0) scale(1) } }`}</style>
     </>
   )
 }

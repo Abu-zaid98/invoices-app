@@ -352,11 +352,11 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
                   ? '1.5px solid var(--brand)'
                   : '1.5px solid var(--border)',
                 background: isSelected
-                  ? 'linear-gradient(135deg, rgba(255,176,32,.18), rgba(255,122,61,.12))'
-                  : 'rgba(255,255,255,0.04)',
+                  ? 'var(--brand-chip)'
+                  : 'var(--chip)',
                 cursor: 'pointer',
                 transition: 'all .2s',
-                boxShadow: isSelected ? '0 4px 16px rgba(255,176,32,.2)' : 'none',
+                boxShadow: isSelected ? '0 4px 16px var(--brand-glow)' : 'none',
               }}
             >
               {/* Flag */}
@@ -419,9 +419,10 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
               style={{
                 padding: '9px 6px', borderRadius: 12, fontSize: 12.5, fontWeight: active ? 800 : 500,
                 border: active ? '1.5px solid var(--brand)' : '1.5px solid var(--border)',
-                background: active ? 'linear-gradient(135deg, rgba(255,176,32,.18), rgba(255,122,61,.12))' : 'rgba(255,255,255,0.04)',
+                background: active ? 'var(--brand-chip)' : 'var(--chip)',
                 color: active ? 'var(--brand)' : 'var(--muted)',
                 cursor: 'pointer', transition: 'all .2s',
+                boxShadow: active ? '0 4px 14px var(--brand-glow)' : 'none',
               }}
             >
               {PAYMENT_META[s].icon} {PAYMENT_META[s].label}
@@ -476,7 +477,7 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
                   style={{
                     padding: '8px 4px', borderRadius: 12, fontSize: 12, fontWeight: active ? 800 : 500,
                     border: active ? '1.5px solid var(--brand)' : '1.5px solid var(--border)',
-                    background: active ? 'linear-gradient(135deg, rgba(255,176,32,.18), rgba(255,122,61,.12))' : 'rgba(255,255,255,0.04)',
+                    background: active ? 'var(--brand-chip)' : 'var(--chip)',
                     color: active ? 'var(--brand)' : 'var(--muted)',
                     cursor: 'pointer', transition: 'all .2s',
                   }}
@@ -600,8 +601,8 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
           width: '100%',
           padding: '10px',
           borderRadius: 12,
-          border: '1.5px dashed rgba(255,255,255,.2)',
-          background: 'rgba(255,255,255,.04)',
+          border: '1.5px dashed var(--dashed)',
+          background: 'var(--chip)',
           color: 'var(--muted)',
           fontSize: 13,
           fontWeight: 700,
@@ -609,7 +610,7 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
           transition: 'all .2s',
         }}
         onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--brand)')}
-        onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,.2)')}
+        onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--dashed)')}
       >
         + إضافة صنف
       </button>
@@ -627,7 +628,7 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
                 style={{
                   padding: '8px 4px', borderRadius: 10, fontSize: 12, fontWeight: active ? 800 : 500,
                   border: active ? '1.5px solid var(--brand)' : '1.5px solid var(--border)',
-                  background: active ? 'rgba(255,176,32,0.12)' : 'transparent',
+                  background: active ? 'var(--brand-chip)' : 'var(--chip)',
                   color: active ? 'var(--brand)' : 'var(--muted)',
                   cursor: 'pointer', transition: 'all .2s',
                 }}
@@ -680,7 +681,7 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
       {!attachment ? (
         <label
           className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-[1.5px] border-dashed px-4 py-3 text-sm font-bold text-[var(--muted)] transition-colors"
-          style={{ borderColor: 'rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.04)' }}
+          style={{ borderColor: 'var(--dashed)', background: 'var(--chip)' }}
         >
           {attachmentBusy ? '⏳ جارٍ معالجة الصورة...' : '📷 إرفاق صورة من الجهاز'}
           <input type="file" accept="image/*" onChange={handleAttachmentFile} className="hidden" disabled={attachmentBusy} />
@@ -712,8 +713,8 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
             marginTop: 14,
             padding: '12px 16px',
             borderRadius: 14,
-            background: 'linear-gradient(135deg, rgba(255,176,32,.12), rgba(255,122,61,.08))',
-            border: '1px solid rgba(255,176,32,.25)',
+            background: 'var(--total-bg)',
+            border: '1px solid var(--total-border)',
           }}
         >
           <BreakRow label="المجموع الفرعي" value={breakdown.subtotal} currency={currency} />
@@ -723,7 +724,7 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
           {breakdown.taxAmount > 0 && (
             <BreakRow label={`الضريبة (${Number(taxStr) || 0}%)`} value={breakdown.taxAmount} currency={currency} />
           )}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,176,32,.25)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--total-border)' }}>
             <span style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600 }}>المجموع الكلي</span>
             <span style={{ fontSize: 18, fontWeight: 900 }} className="accent-text">
               {breakdown.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}{' '}

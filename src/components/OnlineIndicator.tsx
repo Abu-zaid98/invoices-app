@@ -30,22 +30,21 @@ export default function OnlineIndicator() {
       <div
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
-          fontSize: 12, fontWeight: 800,
+          fontSize: 12, fontWeight: 500, letterSpacing: '-0.01em',
           padding: '6px 14px', borderRadius: 999,
-          background: online ? 'rgba(34,201,163,0.15)' : 'rgba(245,158,11,0.15)',
-          border: online ? '1px solid rgba(34,201,163,0.4)' : '1px solid rgba(245,158,11,0.4)',
-          color: online ? '#5eead4' : '#fcd34d',
+          background: online ? 'rgba(52, 199, 89, 0.12)' : 'rgba(255, 149, 0, 0.12)',
+          border: online ? '0.5px solid rgba(52, 199, 89, 0.3)' : '0.5px solid rgba(255, 149, 0, 0.3)',
+          color: online ? '#34C759' : '#FF9500',
           animation: 'fadeIn .2s ease',
         }}
       >
         <span style={{
           width: 8, height: 8, borderRadius: '50%',
-          background: online ? '#22c9a3' : '#f59e0b',
-          boxShadow: online ? '0 0 8px #22c9a3' : '0 0 8px #f59e0b',
+          background: online ? '#34C759' : '#FF9500',
+          boxShadow: online ? '0 0 8px #34C759' : '0 0 8px #FF9500',
         }} />
         {online ? 'عاد الاتصال بالإنترنت' : 'غير متصل — التطبيق يعمل على بيانات جهازك 📴'}
       </div>
-      <style>{`@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }`}</style>
     </div>
   )
 }

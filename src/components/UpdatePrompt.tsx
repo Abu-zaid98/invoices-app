@@ -1,6 +1,6 @@
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
-/** إشعار توفر نسخة جديدة من التطبيق (PWA update) */
+/** إشعار توفر نسخة جديدة من التطبيق (PWA update) — تصميم Apple */
 export default function UpdatePrompt() {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
@@ -20,23 +20,28 @@ export default function UpdatePrompt() {
     >
       <div style={{
         pointerEvents: 'auto', width: '100%', maxWidth: 508,
-        background: 'linear-gradient(160deg,#1a2340,#0d1526)',
-        border: '1px solid rgba(46,139,255,0.4)', borderRadius: 20, padding: '12px 14px',
-        boxShadow: '0 18px 50px rgba(0,0,0,0.55)',
-        animation: 'installUp .3s cubic-bezier(.34,1.4,.64,1)',
+        background: 'var(--modal-bg)',
+        backdropFilter: 'blur(40px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+        border: '0.5px solid var(--separator)',
+        borderRadius: '20px', padding: '12px 16px',
+        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06)',
+        animation: 'slideUp .3s cubic-bezier(0.34, 1.4, 0.64, 1)',
         direction: 'rtl', display: 'flex', alignItems: 'center', gap: 10,
       }}>
         <span style={{ fontSize: 26 }}>🚀</span>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 900, color: '#fff' }}>تحديث جديد متاح</div>
-          <div style={{ fontSize: 11.5, color: '#9aa5b8' }}>أعد التحميل للحصول على أحدث المزايا</div>
+          <div style={{ fontSize: 13.5, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>تحديث جديد متاح</div>
+          <div style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 400 }}>أعد التحميل للحصول على أحدث المزايا</div>
         </div>
         <button
           onClick={() => updateServiceWorker(true)}
           style={{
-            padding: '9px 16px', borderRadius: 12, border: 'none',
-            background: 'linear-gradient(135deg,var(--brand),var(--brand2))',
-            color: '#1a1200', fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit',
+            padding: '9px 16px', borderRadius: '12px', border: 'none',
+            background: '#007AFF', color: '#fff', fontSize: 13, fontWeight: 600,
+            letterSpacing: '-0.01em', cursor: 'pointer', fontFamily: 'inherit',
+            boxShadow: '0 2px 8px rgba(0, 122, 255, 0.25)',
+            transition: 'all 0.15s ease',
           }}
         >
           تحديث
@@ -44,12 +49,11 @@ export default function UpdatePrompt() {
         <button
           onClick={() => setNeedRefresh(false)}
           aria-label="إغلاق"
-          style={{ background: 'transparent', border: 'none', color: '#8b96ab', fontSize: 15, cursor: 'pointer' }}
+          style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: 15, cursor: 'pointer' }}
         >
           ✕
         </button>
       </div>
-      <style>{`@keyframes installUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }`}</style>
     </div>
   )
 }
