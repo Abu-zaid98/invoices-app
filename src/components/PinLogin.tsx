@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { useAppData } from '../lib/AppDataContext'
 import { useToast } from '../lib/useToast'
 import ConfirmModal from './ConfirmModal'
+import DeveloperSignature from './DeveloperSignature'
+import BrandMark from './ui/BrandMark'
+import Icon from './ui/Icon'
 
 const LOCK_KEY = 'pin-lockout'
 const MAX_FREE_TRIES = 5
@@ -73,6 +76,11 @@ export default function PinLogin({ onUnlock }: { onUnlock: () => void }) {
     setBuffer((b) => (b.length < 8 ? b + key : b))
   }
 
+  /** تبديل الثيم متاح قبل الدخول — تُحفظ القيمة في بيانات التطبيق كالمعتاد */
+  function toggleTheme() {
+    updateMeta('theme', meta.theme === 'light' ? 'dark' : 'light').catch(() => {})
+  }
+
   async function confirm() {
     if (locked) return toast(`الدخول مقفل مؤقتاً — حاول بعد ${fmtWait(lockedMs)}`, 'danger')
     if (buffer.length < 4) return toast('الرمز يجب أن يكون ٤ أرقام على الأقل', 'danger')
@@ -98,7 +106,6 @@ export default function PinLogin({ onUnlock }: { onUnlock: () => void }) {
     if (buffer === meta.pin) {
       writeLock({ fail: 0, until: 0 })
       setLock({ fail: 0, until: 0 })
-      toast('تم تسجيل الدخول')
       onUnlock()
     } else {
       const fail = lock.fail + 1
@@ -129,102 +136,130 @@ export default function PinLogin({ onUnlock }: { onUnlock: () => void }) {
 
   const dotsLen = Math.max(4, buffer.length)
 
+  const title = stage === 'setup2' ? 'أعد إدخال الرمز للتأكيد' : meta.pin ? 'أدخل رمز الدخول' : 'أنشئ رمز الدخول'
+  const subtitle = stage === 'setup2' ? 'الخطوة الثانية — تأكيد الرمز' : 'رمز رقمي من ٤ أرقام أو أكثر'
+  const isLight = meta.theme === 'light'
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center">
-      <div style={{
-        width: 80, height: 80, borderRadius: '22px',
-        background: 'linear-gradient(135deg, #007AFF, #5856D6)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 36, color: '#fff', marginBottom: 24,
-        boxShadow: '0 8px 24px rgba(0, 122, 255, 0.3)',
-      }}>
-        🔆
+    <div
+      className="stack animate-in"
+      style={{
+        position: 'relative',
+        minHeight: '100dvh',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 'calc(28px + env(safe-area-inset-top, 0px)) 24px calc(28px + env(safe-area-inset-bottom, 0px))',
+        textAlign: 'center',
+      }}
+    >
+      <button
+        type="button"
+        className="icon-btn pin-theme"
+        onClick={toggleTheme}
+        aria-label={isLight ? 'التبديل للوضع الداكن' : 'التبديل للوضع الفاتح'}
+        title={isLight ? 'الوضع الداكن' : 'الوضع الفاتح'}
+      >
+        <Icon name={isLight ? 'moon' : 'sun'} />
+      </button>
+
+      <span className="app-logo" style={{ width: 76, height: 76, borderRadius: 24, margin: '0 auto 6px' }}>
+        <BrandMark size={36} style={{ width: 36, height: 36 }} />
+      </span>
+
+      <div>
+        <h2 className="t-title" style={{ margin: 0 }}>
+          {title}
+        </h2>
+        <p className="t-sub" style={{ marginTop: 4 }}>
+          {subtitle}
+        </p>
       </div>
-      <h2 className="mt-3 text-xl font-bold" style={{ letterSpacing: '-0.02em', color: 'var(--text)' }}>
-        {stage === 'setup2' ? 'أعد إدخال الرمز للتأكيد' : meta.pin ? 'أدخل رمز الدخول' : 'أنشئ رمز الدخول'}
-      </h2>
-      <p className="mt-1 text-sm" style={{ color: 'var(--muted)', fontWeight: 400 }}>رمز رقمي (٤ أرقام أو أكثر)</p>
+
       {locked ? (
-        <div className="my-5 rounded-2xl border border-[rgba(255,59,48,0.2)] bg-[rgba(255,59,48,0.06)] px-6 py-4 text-sm font-medium" style={{ color: '#FF3B30' }}>
-          🔒 مقفل مؤقتاً لحمايتك
-          <div className="mt-1 text-lg font-bold">حاول بعد {fmtWait(lockedMs)}</div>
+        <div
+          className="card card--pad"
+          style={{ background: 'var(--danger-soft)', borderColor: 'transparent', color: 'var(--danger)', width: 'min(320px, 88vw)' }}
+        >
+          <div className="inline" style={{ justifyContent: 'center', fontWeight: 700 }}>
+            <Icon name="lock" size={18} />
+            مقفل مؤقتاً لحمايتك
+          </div>
+          <div className="amount-lg" style={{ marginTop: 4 }}>
+            حاول بعد {fmtWait(lockedMs)}
+          </div>
         </div>
       ) : (
-        <div className="my-5 flex gap-3">
+        <div
+          className="inline"
+          style={{ justifyContent: 'center', gap: 12, minHeight: 24 }}
+          role="status"
+          aria-label={`${buffer.length} من الأرقام مُدخلة`}
+        >
           {Array.from({ length: dotsLen }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-4 w-4 rounded-full border-2 transition-all ${
-                i < buffer.length ? 'scale-110' : ''
-              }`}
-              style={{
-                borderColor: i < buffer.length ? '#007AFF' : 'var(--separator)',
-                background: i < buffer.length ? '#007AFF' : 'transparent',
-                boxShadow: i < buffer.length ? '0 0 12px rgba(0, 122, 255, 0.4)' : 'none',
-              }}
-            />
+            <span key={i} className="pin-dot" data-on={i < buffer.length} />
           ))}
         </div>
       )}
-      <div className="grid w-[270px] grid-cols-3 gap-3.5">
+
+      <div className="keypad" role="group" aria-label="لوحة الأرقام" dir="ltr">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
           <button
             key={n}
+            type="button"
+            className="keypad-key keypad-key--num"
             onClick={() => press(String(n))}
-            className="h-16 rounded-full border text-xl font-medium transition-all active:scale-95"
-            style={{
-              borderColor: 'var(--separator)',
-              background: 'var(--card)',
-              color: 'var(--text)',
-              boxShadow: 'var(--shadow-sm)',
-            }}
+            disabled={locked}
+            aria-label={`الرقم ${n}`}
           >
-            {n}
+            <span lang="en">{n}</span>
           </button>
         ))}
         <button
+          type="button"
+          className="keypad-key keypad-key--clear"
           onClick={() => press('clear')}
-          className="h-16 rounded-full border text-sm font-medium transition-all active:scale-95"
-          style={{ borderColor: 'var(--separator)', background: 'var(--card)', color: 'var(--muted)', boxShadow: 'var(--shadow-sm)' }}
+          disabled={locked}
+          aria-label="مسح الكل"
         >
-          مسح
+          C
         </button>
         <button
+          type="button"
+          className="keypad-key keypad-key--num"
           onClick={() => press('0')}
-          className="h-16 rounded-full border text-xl font-medium transition-all active:scale-95"
-          style={{ borderColor: 'var(--separator)', background: 'var(--card)', color: 'var(--text)', boxShadow: 'var(--shadow-sm)' }}
+          disabled={locked}
+          aria-label="الرقم 0"
         >
-          0
+          <span lang="en">0</span>
         </button>
-        <button
-          onClick={() => press('back')}
-          className="h-16 rounded-full border text-xl font-medium transition-all active:scale-95"
-          style={{ borderColor: 'var(--separator)', background: 'var(--card)', color: 'var(--text)', boxShadow: 'var(--shadow-sm)' }}
-        >
-          ⌫
+        <button type="button" className="keypad-key keypad-key--danger" onClick={() => press('back')} disabled={locked} aria-label="حذف رقم" title="حذف رقم واحد">
+          <Icon name="delete" size={22} />
         </button>
       </div>
+
       <button
+        type="button"
+        className="btn btn--primary btn--lg"
+        style={{ width: 'min(300px, 86vw)' }}
         onClick={confirm}
-        className="mt-4 rounded-full px-8 py-3 text-base font-semibold transition-all active:scale-95"
-        style={{
-          background: '#007AFF', color: '#fff',
-          boxShadow: '0 4px 14px rgba(0, 122, 255, 0.25)',
-          border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-        }}
+        disabled={locked}
       >
+        <Icon name="check" />
         تأكيد
       </button>
+
       {meta.pin && (
-        <p onClick={() => setShowForgotModal(true)} className="mt-4 cursor-pointer text-sm" style={{ color: 'var(--muted)', fontWeight: 400 }}>
+        <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowForgotModal(true)}>
           نسيت الرمز؟ إعادة التعيين
-        </p>
+        </button>
       )}
+
+      <DeveloperSignature />
 
       <ConfirmModal
         isOpen={showForgotModal}
         variant="warning"
-        icon="🔑"
+        icon={<Icon name="key" />}
         title="إعادة تعيين رمز الدخول؟"
         message="سيتم مسح رمز الدخول الحالي وستتمكن من تعيين رمز جديد. فواتيرك وبياناتك محفوظة ولن تُمس. هل تريد المتابعة؟"
         confirmLabel="نعم، إعادة التعيين"

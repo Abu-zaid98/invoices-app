@@ -6,6 +6,8 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
+export type PWAPlatform = 'ios' | 'android' | 'desktop'
+
 const DISMISS_KEY = 'pwa-install-dismissed-at'
 const COOLDOWN_DAYS = 7
 
@@ -18,10 +20,19 @@ function isStandalone(): boolean {
   return false
 }
 
-function isIOS(): boolean {
+export function isIOSDevice(): boolean {
   if (typeof navigator === 'undefined') return false
   return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+}
+
+export function detectPlatform(): PWAPlatform {
+  if (typeof navigator === 'undefined') return 'desktop'
+  if (isIOSDevice()) return 'ios'
+  if (/android|harmonyos/i.test(navigator.userAgent)) return 'android'
+  // بعض المتصفحات على الهاتف لا تُعلن عن النظام بوضوح
+  if (/mobile/i.test(navigator.userAgent)) return 'android'
+  return 'desktop'
 }
 
 function cooldownActive(): boolean {
@@ -36,11 +47,18 @@ function cooldownActive(): boolean {
   }
 }
 
-export function usePWAInstall(autoDelayMs = 2500) {
+/**
+ * منطق تثبيت PWA.
+ * - أندرويد: زر تثبيت أصلي عبر beforeinstallprompt، وإن لم يتوفر نعرض خطوات يدوية.
+ * - iPhone: خطوات يدوية (سفاري ← إضافة إلى الشاشة الرئيسية).
+ * - الحاسوب: لا إظهار تلقائي (متاح يدوياً من الإعدادات).
+ */
+export function usePWAInstall(autoDelayMs = 2200) {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null)
   const [installed, setInstalled] = useState<boolean>(() => isStandalone())
   const [visible, setVisible] = useState(false)
-  const ios = isIOS()
+  const platform = detectPlatform()
+  const ios = platform === 'ios'
   const timer = useRef<number | null>(null)
 
   useEffect(() => {
@@ -71,16 +89,19 @@ export function usePWAInstall(autoDelayMs = 2500) {
     }
   }, [])
 
-  // إظهار تلقائي مرة واحدة بعد مهلة — إذا لم يكن مثبتاً ولم يرفض مؤخراً
+  // إظهار تلقائي مرة واحدة عند فتح التطبيق (الجوال فقط، وما لم يُثبَّت أو يُرفض مؤخراً)
   useEffect(() => {
-    if (installed || cooldownActive()) return
-    // على أندرويد ننتظر حدث beforeinstallprompt، وعلى iOS نظهر مباشرة
-    if (!ios && !deferred) return
-    timer.current = window.setTimeout(() => setVisible(true), autoDelayMs)
+    if (installed) return
+    if (platform === 'desktop') return
+    if (cooldownActive()) return
+    timer.current = window.setTimeout(() => {
+      // قد يكون المستخدم أغلق الإشعار قبل انتهاء المهلة
+      if (!cooldownActive()) setVisible(true)
+    }, autoDelayMs)
     return () => {
       if (timer.current) window.clearTimeout(timer.current)
     }
-  }, [installed, deferred, ios, autoDelayMs])
+  }, [installed, platform, autoDelayMs])
 
   const dismiss = useCallback(() => {
     setVisible(false)
@@ -92,6 +113,8 @@ export function usePWAInstall(autoDelayMs = 2500) {
   }, [])
 
   const openManual = useCallback(() => setVisible(true), [])
+
+  const close = useCallback(() => setVisible(false), [])
 
   /** يُرجع true إذا تم التثبيت، و'ios' إذا يجب عرض تعليمات يدوية */
   const install = useCallback(async (): Promise<true | 'ios' | false> => {
@@ -115,9 +138,11 @@ export function usePWAInstall(autoDelayMs = 2500) {
     visible: visible && !installed,
     installed,
     isIOS: ios,
+    platform,
     canNativePrompt: !!deferred,
     install,
     dismiss,
+    close,
     openManual,
     setVisible,
   }

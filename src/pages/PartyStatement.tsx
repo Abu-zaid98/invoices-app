@@ -1,6 +1,9 @@
 import { useMemo } from 'react'
 import { useAppData } from '../lib/AppDataContext'
-import { convert, currencySymbol, invoiceBalance, PAYMENT_META } from '../lib/types'
+import { convert, currencySymbol, invoiceBalance, isOverdue, PAYMENT_META } from '../lib/types'
+import { formatDate } from '../lib/format'
+import type { IconName } from '../components/ui/Icon'
+import Icon from '../components/ui/Icon'
 
 interface Props {
   partyName: string
@@ -52,42 +55,66 @@ export default function PartyStatement({ partyName, onBack, onOpenInvoice }: Pro
     return rows.sort((a, b) => b.date - a.date)
   }, [partyInvoices])
 
+  const kindLabel = kinds.sale && kinds.purchase ? 'عميل + مورد' : kinds.sale ? 'عميل' : kinds.purchase ? 'مورد' : 'إشعارات فقط'
+
+  const header = (
+    <div className="page-head">
+      <button type="button" className="icon-btn icon-btn--ghost" onClick={onBack} aria-label="رجوع">
+        <Icon name="arrowRight" />
+      </button>
+      <span className="t-heading">كشف الحساب</span>
+      <span style={{ width: 40 }} aria-hidden="true" />
+    </div>
+  )
+
   if (partyInvoices.length === 0) {
     return (
-      <div>
-        <button
-          onClick={onBack}
-          className="mb-3 rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-semibold hover:bg-white/5 transition-colors"
-        >
-          ← رجوع
-        </button>
-        <div className="card p-4 text-center text-[var(--muted)]">لا توجد فواتير لهذا الطرف</div>
+      <div className="stack">
+        {header}
+        <div className="card card--flush">
+          <div className="empty">
+            <span className="empty-icon">
+              <Icon name="user" />
+            </span>
+            <div className="empty-title">لا توجد فواتير لهذا الطرف</div>
+          </div>
+        </div>
       </div>
     )
   }
 
-  function SummaryCard({ title, icon, data, tone }: {
+  function SummaryCard({ title, icon, data, tone, color }: {
     title: string
-    icon: string
+    icon: IconName
     data: { count: number; invoiced: number; paid: number; remaining: number }
-    tone: 'green' | 'amber'
+    tone: string
+    color: string
   }) {
-    const color = tone === 'green' ? 'text-emerald-400' : 'text-amber-400'
     return (
-      <div className="card p-4">
-        <div className="mb-2 text-sm font-black">{icon} {title} ({data.count})</div>
-        <div className="space-y-1 text-xs">
-          <div className="flex justify-between text-[var(--muted)]">
-            <span>إجمالي الفواتير</span>
-            <b className="text-[var(--text)]">{data.invoiced.toLocaleString('en-US')} {currencySymbol(dispCur)}</b>
+      <div className="card card--pad">
+        <div className="inline" style={{ marginBottom: 10 }}>
+          <span className={`stat-icon ${tone}`}>
+            <Icon name={icon} />
+          </span>
+          <span className="grow">
+            <span className="row-title" style={{ display: 'block' }}>{title}</span>
+            <span className="row-sub" style={{ display: 'block' }}>{data.count} فاتورة</span>
+          </span>
+        </div>
+        <div className="stack-sm">
+          <div className="row-between t-body">
+            <span style={{ color: 'var(--muted)' }}>إجمالي الفواتير</span>
+            <b className="amount">{data.invoiced.toLocaleString('en-US')} {currencySymbol(dispCur)}</b>
           </div>
-          <div className="flex justify-between text-[var(--muted)]">
-            <span>المدفوع</span>
-            <b className="text-emerald-400">{data.paid.toLocaleString('en-US')} {currencySymbol(dispCur)}</b>
+          <div className="row-between t-body">
+            <span style={{ color: 'var(--muted)' }}>المدفوع</span>
+            <b className="amount" style={{ color: 'var(--success)' }}>
+              {data.paid.toLocaleString('en-US')} {currencySymbol(dispCur)}
+            </b>
           </div>
-          <div className="flex justify-between border-t border-[var(--border)] pt-1">
-            <span className="font-bold">المتبقي</span>
-            <b className={color}>{data.remaining.toLocaleString('en-US')} {currencySymbol(dispCur)}</b>
+          <div className="row-between" style={{ paddingTop: 8, borderTop: '1px solid var(--separator)' }}>
+            <span style={{ fontWeight: 700 }}>المتبقي</span>
+            <b className="amount" style={{ color }}>{data.remaining.toLocaleString('en-US')} {currencySymbol(dispCur)}</b>
           </div>
         </div>
       </div>
@@ -95,81 +122,105 @@ export default function PartyStatement({ partyName, onBack, onOpenInvoice }: Pro
   }
 
   return (
-    <div>
-      <button
-        onClick={onBack}
-        className="mb-3 rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-semibold hover:bg-white/5 transition-colors"
-      >
-        ← رجوع
-      </button>
+    <div className="stack">
+      {header}
 
-      <div className="card mb-3 p-4 text-center">
-        <div className="text-3xl">👤</div>
-        <h2 className="mt-1 text-lg font-black">{partyName}</h2>
-        <span className="mt-1 inline-block rounded-full bg-white/10 px-3 py-0.5 text-xs font-bold text-[var(--muted)]">
-          {kinds.sale && kinds.purchase ? 'عميل + مورد' : kinds.sale ? '📦 عميل' : '🛒 مورد'}
+      <div className="card card--pad" style={{ textAlign: 'center' }}>
+        <span className="avatar" style={{ width: 58, height: 58, fontSize: 22, margin: '0 auto' }}>
+          {partyName.trim().charAt(0) || '؟'}
         </span>
+        <h2 className="t-title" style={{ marginTop: 10 }}>{partyName}</h2>
+        <span className="badge badge--neutral" style={{ marginTop: 6 }}>{kindLabel}</span>
       </div>
 
-      <div className={`grid gap-2.5 ${kinds.sale && kinds.purchase ? 'grid-cols-1' : 'grid-cols-1'}`}>
-        {kinds.sale && <SummaryCard title="كمبيعات (مستحق لك)" icon="📦" data={sums.sale} tone="green" />}
-        {kinds.purchase && <SummaryCard title="كمشتريات (مستحق عليك)" icon="🛒" data={sums.purchase} tone="amber" />}
-        {!kinds.sale && !kinds.purchase && kinds.credit && (
-          <div className="card p-4 text-center">
-            <div className="mb-1 text-sm font-black">↩️ إشعارات مطبقة ({partyInvoices.length})</div>
-            <div className="text-lg font-black text-violet-300">
-              − {creditTotal.toLocaleString('en-US')} {currencySymbol(dispCur)}
+      {kinds.sale && (
+        <SummaryCard title="المبيعات — مستحق لك" icon="wallet" data={sums.sale} tone="g-green" color="var(--success)" />
+      )}
+      {kinds.purchase && (
+        <SummaryCard title="المشتريات — مستحق عليك" icon="receipt" data={sums.purchase} tone="g-amber" color="var(--warning)" />
+      )}
+      {!kinds.sale && !kinds.purchase && kinds.credit && (
+        <div className="card card--pad" style={{ textAlign: 'center' }}>
+          <div className="inline" style={{ justifyContent: 'center', fontWeight: 700 }}>
+            <Icon name="refresh" size={17} />
+            إشعارات مطبقة ({partyInvoices.length})
+          </div>
+          <div className="amount-lg" style={{ color: 'var(--violet)', marginTop: 6 }}>
+            − {creditTotal.toLocaleString('en-US')} {currencySymbol(dispCur)}
+          </div>
+        </div>
+      )}
+
+      <div className="section-head">
+        <span className="section-title">الفواتير</span>
+        <span className="section-meta">{partyInvoices.length}</span>
+      </div>
+      <div className="card card--flush">
+        <div className="list list-tappable" style={{ padding: '4px 0' }}>
+          {partyInvoices.map((inv) => {
+            const bal = invoiceBalance(inv)
+            const st = PAYMENT_META[inv.paymentStatus ?? 'unpaid']
+            const credit = inv.type === 'credit'
+            const late = isOverdue(inv)
+            const typeIcon: IconName = credit ? 'refresh' : inv.type === 'sale' ? 'upload' : 'download'
+            const tone = credit ? 'g-violet' : inv.type === 'sale' ? 'g-blue' : 'g-amber'
+            return (
+              <button key={inv.id} type="button" className="row" onClick={() => onOpenInvoice(inv.id)}>
+                <span className={`stat-icon ${tone}`}>
+                  <Icon name={typeIcon} />
+                </span>
+                <span className="row-main">
+                  <span className="row-title" style={{ display: 'block' }}>
+                    #{String(inv.id).padStart(4, '0')}
+                  </span>
+                  <span className="row-sub truncate" style={{ display: 'block' }}>
+                    {formatDate(inv.date)} · {credit ? 'إشعار' : inv.type === 'sale' ? 'بيع' : 'شراء'}
+                    {!credit && ` · ${st.label}`}
+                  </span>
+                </span>
+                <span className="row-end">
+                  <span className="amount" style={{ display: 'block', color: credit ? 'var(--violet)' : 'var(--text)' }}>
+                    {credit ? '− ' : ''}{inv.total.toLocaleString('en-US')} {currencySymbol(inv.currency)}
+                  </span>
+                  {!credit && bal > 0 && (
+                    <span className={`badge ${late ? 'badge--danger' : 'badge--warning'}`} style={{ marginTop: 3 }}>
+                      متبقٍ {bal.toLocaleString('en-US')}
+                    </span>
+                  )}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {ledger.length > 0 && (
+        <>
+          <div className="section-head">
+            <span className="section-title">سجل الدفعات</span>
+            <span className="section-meta">{ledger.length}</span>
+          </div>
+          <div className="card card--flush">
+            <div className="list" style={{ padding: '4px 0' }}>
+              {ledger.map((r, idx) => (
+                <div key={`${r.invId}-${idx}`} className="row">
+                  <span className="stat-icon g-green">
+                    <Icon name="cash" />
+                  </span>
+                  <span className="row-main">
+                    <span className="row-title" style={{ display: 'block', color: 'var(--success)' }}>
+                      + {r.amount.toLocaleString('en-US')} {currencySymbol(r.currency)}
+                    </span>
+                    <span className="row-sub truncate" style={{ display: 'block' }}>
+                      فاتورة #{String(r.invId).padStart(4, '0')} · {formatDate(r.date)}
+                      {r.note && ` · ${r.note}`}
+                    </span>
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Invoices */}
-      <div className="card mt-3 p-4">
-        <h3 className="mb-2 font-bold">🧾 الفواتير ({partyInvoices.length})</h3>
-        {partyInvoices.map((inv) => {
-          const bal = invoiceBalance(inv)
-          const st = PAYMENT_META[inv.paymentStatus ?? 'unpaid']
-          const credit = inv.type === 'credit'
-          return (
-            <div
-              key={inv.id}
-              onClick={() => onOpenInvoice(inv.id)}
-              className="pressable flex cursor-pointer items-center justify-between gap-2 border-b border-[var(--border)] py-2.5 last:border-b-0"
-            >
-              <div className="min-w-0">
-                <div className="text-sm font-bold">
-                  #{String(inv.id).padStart(4, '0')} · {new Date(inv.date).toLocaleDateString('en-US')}
-                </div>
-                <div className="text-[11px] text-[var(--muted)]">
-                  {credit ? '↩️ إشعار' : inv.type === 'sale' ? 'بيع' : 'شراء'} · {credit ? 'مطبَّق' : `${st.icon} ${st.label}`}
-                  {!credit && bal > 0 && ` · متبقٍ ${bal.toLocaleString('en-US')} ${currencySymbol(inv.currency)}`}
-                </div>
-              </div>
-              <div className={`shrink-0 text-sm font-extrabold ${credit ? 'text-violet-300' : 'accent-text'}`}>
-                {credit ? '− ' : ''}{inv.total.toLocaleString('en-US')} {currencySymbol(inv.currency)}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Payments ledger */}
-      {ledger.length > 0 && (
-        <div className="card mt-3 p-4">
-          <h3 className="mb-2 font-bold">💵 سجل الدفعات ({ledger.length})</h3>
-          {ledger.map((r, idx) => (
-            <div key={`${r.invId}-${idx}`} className="flex items-center justify-between border-b border-[var(--border)] py-2 text-sm last:border-b-0">
-              <div className="text-xs text-[var(--muted)]">
-                {new Date(r.date).toLocaleDateString('en-US')} · فاتورة #{String(r.invId).padStart(4, '0')}
-                {r.note && ` · ${r.note}`}
-              </div>
-              <div className="font-bold text-emerald-400">
-                + {r.amount.toLocaleString('en-US')} {currencySymbol(r.currency)}
-              </div>
-            </div>
-          ))}
-        </div>
+        </>
       )}
     </div>
   )

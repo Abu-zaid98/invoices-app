@@ -1,57 +1,63 @@
+import { useEffect, useRef } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import Icon from './ui/Icon'
 
-/** إشعار توفر نسخة جديدة من التطبيق (PWA update) — تصميم Apple */
+/**
+ * إشعار توفّر تحديث جديد للتطبيق.
+ * يتحقّق من وجود تحديث عند فتح التطبيق وعند العودة إليه (visibilitychange).
+ */
 export default function UpdatePrompt() {
+  const regRef = useRef<ServiceWorkerRegistration | undefined>(undefined)
+  const lastCheck = useRef(0)
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
-  } = useRegisterSW()
+  } = useRegisterSW({
+    onRegisteredSW(_swUrl, registration) {
+      regRef.current = registration
+    },
+  })
+
+  useEffect(() => {
+    // نتحقّق عند الفتح وعند العودة للتطبيق، مع تهيئة كي لا نتكرّر بلا داعٍ
+    const check = (force = false) => {
+      const now = Date.now()
+      if (!force && now - lastCheck.current < 30 * 60 * 1000) return
+      lastCheck.current = now
+      regRef.current?.update().catch(() => {})
+    }
+    check(true)
+    const onReturn = () => {
+      if (document.visibilityState === 'visible') check()
+    }
+    document.addEventListener('visibilitychange', onReturn)
+    window.addEventListener('focus', onReturn)
+    return () => {
+      document.removeEventListener('visibilitychange', onReturn)
+      window.removeEventListener('focus', onReturn)
+    }
+  }, [])
 
   if (!needRefresh) return null
 
   return (
-    <div
-      role="alert"
-      style={{
-        position: 'fixed', bottom: 86, left: 0, right: 0, zIndex: 56,
-        display: 'flex', justifyContent: 'center', padding: '0 16px',
-        pointerEvents: 'none',
-      }}
-    >
-      <div style={{
-        pointerEvents: 'auto', width: '100%', maxWidth: 508,
-        background: 'var(--modal-bg)',
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: '0.5px solid var(--separator)',
-        borderRadius: '20px', padding: '12px 16px',
-        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06)',
-        animation: 'slideUp .3s cubic-bezier(0.34, 1.4, 0.64, 1)',
-        direction: 'rtl', display: 'flex', alignItems: 'center', gap: 10,
-      }}>
-        <span style={{ fontSize: 26 }}>🚀</span>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>تحديث جديد متاح</div>
-          <div style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 400 }}>أعد التحميل للحصول على أحدث المزايا</div>
+    <div className="pwa-toast pwa-toast--update" role="alert">
+      <div className="pwa-toast-head">
+        <span className="pwa-toast-icon">
+          <Icon name="sparkles" />
+        </span>
+        <div className="pwa-toast-main">
+          <div className="pwa-toast-title">تحديث جديد متاح</div>
+          <div className="pwa-toast-sub">أعد التحميل للحصول على أحدث المزايا والإصلاحات</div>
         </div>
-        <button
-          onClick={() => updateServiceWorker(true)}
-          style={{
-            padding: '9px 16px', borderRadius: '12px', border: 'none',
-            background: '#007AFF', color: '#fff', fontSize: 13, fontWeight: 600,
-            letterSpacing: '-0.01em', cursor: 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 2px 8px rgba(0, 122, 255, 0.25)',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          تحديث
+        <button type="button" className="pwa-toast-x" onClick={() => setNeedRefresh(false)} aria-label="إغلاق">
+          <Icon name="x" />
         </button>
-        <button
-          onClick={() => setNeedRefresh(false)}
-          aria-label="إغلاق"
-          style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: 15, cursor: 'pointer' }}
-        >
-          ✕
+      </div>
+      <div className="pwa-toast-actions">
+        <button type="button" className="btn btn--sm pwa-toast-btn" onClick={() => updateServiceWorker(true)}>
+          <Icon name="refresh" size={15} />
+          تحديث الآن
         </button>
       </div>
     </div>

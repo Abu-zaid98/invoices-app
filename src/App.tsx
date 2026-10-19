@@ -3,6 +3,7 @@ import { AppDataProvider, useAppData } from './lib/AppDataContext'
 import { ToastProvider, useToast } from './lib/useToast'
 import { downloadJsonBackup } from './lib/backup'
 import { dueBucket } from './lib/types'
+import { todayLabel } from './lib/format'
 import PinLogin from './components/PinLogin'
 import BottomNav, { type Route } from './components/BottomNav'
 import Dashboard from './pages/Dashboard'
@@ -15,9 +16,10 @@ import PartyStatement from './pages/PartyStatement'
 import Settings from './pages/Settings'
 import ConfirmModal from './components/ConfirmModal'
 import InstallBanner from './components/InstallBanner'
-import Fab from './components/Fab'
 import OnlineIndicator from './components/OnlineIndicator'
 import UpdatePrompt from './components/UpdatePrompt'
+import Icon from './components/ui/Icon'
+import BrandMark from './components/ui/BrandMark'
 
 function Shell() {
   const { loaded, meta, invoices, saveInvoice, updateMeta } = useAppData()
@@ -99,20 +101,22 @@ function Shell() {
 
   if (!loaded) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-[540px] flex-col gap-3 px-4" style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))' }}>
-        <div className="flex items-center gap-2.5">
-          <div className="skeleton" style={{ width: 42, height: 42, borderRadius: 13 }} />
-          <div className="flex-1">
-            <div className="skeleton mb-2" style={{ width: '40%', height: 20 }} />
-            <div className="skeleton" style={{ width: '60%', height: 12 }} />
+      <div className="app-shell" style={{ paddingTop: 'calc(68px + env(safe-area-inset-top, 0px))' }}>
+        <div className="page">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div className="skeleton" style={{ width: 42, height: 42, borderRadius: 13 }} />
+            <div style={{ flex: 1 }}>
+              <div className="skeleton" style={{ width: '40%', height: 18, marginBottom: 8 }} />
+              <div className="skeleton" style={{ width: '60%', height: 11 }} />
+            </div>
           </div>
+          <div className="grid-2">
+            <div className="skeleton" style={{ height: 118 }} />
+            <div className="skeleton" style={{ height: 118 }} />
+          </div>
+          <div className="skeleton" style={{ height: 92 }} />
+          <div className="skeleton" style={{ height: 180 }} />
         </div>
-        <div className="grid grid-cols-2 gap-2.5">
-          <div className="skeleton" style={{ height: 120 }} />
-          <div className="skeleton" style={{ height: 120 }} />
-        </div>
-        <div className="skeleton" style={{ height: 90 }} />
-        <div className="skeleton" style={{ height: 180 }} />
       </div>
     )
   }
@@ -171,25 +175,13 @@ function Shell() {
   }
 
   // ─── تاريخ اليوم + تبديل الثيم ───
-  const AR_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
-  const AR_WEEKDAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
-
-  function todayLabel(): { weekday: string; date: string } {
-    const now = new Date()
-    return {
-      weekday: AR_WEEKDAYS[now.getDay()],
-      date: `${now.getDate()} ${AR_MONTHS[now.getMonth()]} ${now.getFullYear()}`,
-    }
-  }
+  const today = todayLabel()
 
   function toggleTheme() {
     const next = meta.theme === 'light' ? 'dark' : 'light'
-    updateMeta('theme', next).then(() =>
-      toast(next === 'light' ? 'تم التبديل للوضع الفاتح ☀️' : 'تم التبديل للوضع الداكن 🌙'),
-    )
+    // بلا إشعار: التغيير ظاهر فوراً في كل الواجهة
+    updateMeta('theme', next).catch(() => {})
   }
-
-  const today = todayLabel()
 
   const editingInvoice = editingId != null ? invoices.find((i) => i.id === editingId) ?? null : null
 
@@ -249,132 +241,140 @@ function Shell() {
     setRoute('detail')
   }
 
+  const dueTotal = dueCounts.overdue + dueCounts.today + dueCounts.tomorrow
+
   return (
-    <div
-      className="mx-auto max-w-[540px] px-4 pb-28"
-      style={{ paddingTop: 'calc(74px + env(safe-area-inset-top, 0px))' }}
-    >
-      <header className="app-header fixed inset-x-0 top-0 z-40">
-        <div
-          className="mx-auto max-w-[540px] px-4"
-          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
-        >
-          <div className="flex items-center justify-between py-2">
-            <div className="flex items-center gap-2.5">
-              <span className="app-logo">🧾</span>
-              <div>
-                <h2 className="text-[19px] font-bold leading-tight brand-text" style={{ letterSpacing: '-0.02em' }}>فواتيري</h2>
-                <div className="flex items-center gap-1 text-[11px] leading-tight text-[var(--muted)]">
-                  <span style={{ fontWeight: 600, color: 'var(--text)' }}>{today.weekday}</span>
-                  <span>·</span>
-                  <span>{today.date}</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={toggleTheme}
-                className="icon-btn"
-                title={meta.theme === 'light' ? 'تبديل للوضع الداكن 🌙' : 'تبديل للوضع الفاتح ☀️'}
-              >
-                <span>{meta.theme === 'light' ? '🌙' : '☀️'}</span>
-              </button>
-              <button
-                onClick={() => setShowLogoutModal(true)}
-                className="icon-btn"
-                title="قفل التطبيق وتسجيل الخروج"
-              >
-                <span>🔒</span>
-              </button>
-            </div>
+    <div className="app-shell" style={{ paddingTop: 'calc(68px + env(safe-area-inset-top, 0px))' }}>
+      <header className="app-header">
+        <div className="app-header-inner">
+          <div className="app-header-brand">
+            <span className="app-logo">
+              <BrandMark size={22} />
+            </span>
+            <h1 className="brand-text app-brand">فواتيري</h1>
+          </div>
+
+          <div className="app-header-date" title={`${today.weekday} · ${today.date}`}>
+            <span className="ahd-weekday">{today.weekday}</span>
+            <span className="ahd-sep" aria-hidden="true">·</span>
+            <span className="ahd-date">{today.date}</span>
+          </div>
+
+          <div className="app-header-actions">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="icon-btn"
+              aria-label={meta.theme === 'light' ? 'التبديل للوضع الداكن' : 'التبديل للوضع الفاتح'}
+            >
+              <Icon name={meta.theme === 'light' ? 'moon' : 'sun'} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowLogoutModal(true)}
+              className="icon-btn"
+              aria-label="قفل التطبيق"
+            >
+              <Icon name="lock" />
+            </button>
           </div>
         </div>
       </header>
-      <div className="mb-2 flex justify-center empty:hidden">
+
+      <div style={{ marginBottom: 10 }}>
         <OnlineIndicator />
       </div>
 
-      {route === 'dashboard' && <Dashboard />}
-      {route === 'new' && (
-        <InvoiceForm
-          editingInvoice={editingInvoice}
-          draft={formDraft}
-          onDone={(id) => {
-            setEditingId(null)
-            setFormDraft(null)
-            setSelectedId(id)
-            setRoute('detail')
-          }}
-          onCancel={() => {
-            setEditingId(null)
-            setFormDraft(null)
-            setRoute('invoices')
-          }}
-        />
-      )}
-      {route === 'invoices' && (
-        <InvoicesList
-          key={listPreset?.key ?? 0}
-          initialPayFilter={listPreset?.filter ?? 'all'}
-          onOpen={(id) => {
-            setSelectedId(id)
-            setRoute('detail')
-          }}
-        />
-      )}
-      {route === 'detail' && selectedId != null && (
-        <InvoiceDetail
-          invoiceId={selectedId}
-          onBack={() => setRoute('invoices')}
-          onEdit={(id) => {
-            setEditingId(id)
-            setRoute('new')
-          }}
-          onDuplicate={handleDuplicate}
-          onOpenParty={(name) => openParty(name, 'invoices')}
-          onCreateCredit={handleCreateCredit}
-          onOpenInvoice={(id) => {
-            setSelectedId(id)
-            setRoute('detail')
-          }}
-        />
-      )}
-      {route === 'statement' && selectedParty != null && (
-        <PartyStatement
-          partyName={selectedParty}
-          onBack={() => setRoute(partyReturn)}
-          onOpenInvoice={(id) => {
-            setSelectedId(id)
-            setRoute('detail')
-          }}
-        />
-      )}
-      {route === 'reports' && <Reports onOpenParty={(name) => openParty(name, 'reports')} />}
-      {route === 'settings' && <Settings onLocked={() => setUnlocked(false)} />}
+      <main className="page animate-page" key={route}>
+        {route === 'dashboard' && (
+          <Dashboard
+            onOpenInvoice={(id) => {
+              setSelectedId(id)
+              setRoute('detail')
+            }}
+            onOpenOverdue={openDueList}
+            onOpenInvoices={() => navigate('invoices')}
+          />
+        )}
+        {route === 'new' && (
+          <InvoiceForm
+            editingInvoice={editingInvoice}
+            draft={formDraft}
+            onDone={(id) => {
+              setEditingId(null)
+              setFormDraft(null)
+              setSelectedId(id)
+              setRoute('detail')
+            }}
+            onCancel={() => {
+              setEditingId(null)
+              setFormDraft(null)
+              setRoute('invoices')
+            }}
+          />
+        )}
+        {route === 'invoices' && (
+          <InvoicesList
+            key={listPreset?.key ?? 0}
+            initialPayFilter={listPreset?.filter ?? 'all'}
+            onOpen={(id) => {
+              setSelectedId(id)
+              setRoute('detail')
+            }}
+          />
+        )}
+        {route === 'detail' && selectedId != null && (
+          <InvoiceDetail
+            invoiceId={selectedId}
+            onBack={() => setRoute('invoices')}
+            onEdit={(id) => {
+              setEditingId(id)
+              setRoute('new')
+            }}
+            onDuplicate={handleDuplicate}
+            onOpenParty={(name) => openParty(name, 'invoices')}
+            onCreateCredit={handleCreateCredit}
+            onOpenInvoice={(id) => {
+              setSelectedId(id)
+              setRoute('detail')
+            }}
+          />
+        )}
+        {route === 'statement' && selectedParty != null && (
+          <PartyStatement
+            partyName={selectedParty}
+            onBack={() => setRoute(partyReturn)}
+            onOpenInvoice={(id) => {
+              setSelectedId(id)
+              setRoute('detail')
+            }}
+          />
+        )}
+        {route === 'reports' && <Reports onOpenParty={(name) => openParty(name, 'reports')} />}
+        {route === 'settings' && <Settings onLocked={() => setUnlocked(false)} />}
+      </main>
 
-      <BottomNav route={route} onNavigate={navigate} />
-
-      {/* PWA install banner */}
-      <InstallBanner />
-
-      {/* PWA update prompt */}
-      <UpdatePrompt />
-
-      {/* Quick actions FAB */}
-      <Fab
-        hidden={route === 'new'}
+      <BottomNav
+        route={route}
+        onNavigate={navigate}
         lastPartyName={lastPartyName}
-        dueCount={dueCounts.overdue + dueCounts.today + dueCounts.tomorrow}
-        onNew={() => navigate('new')}
+        dueCount={dueTotal}
+        onNew={() => { if (route !== 'new') navigate('new') }}
         onLastParty={newForLastParty}
         onDue={openDueList}
       />
+
+      {/* إشعارات PWA (تحديث + تثبيت) — مُكدَّسة فوق شريط التنقّل */}
+      <div className="pwa-notices">
+        <UpdatePrompt />
+        <InstallBanner />
+      </div>
 
       {/* Due reminder modal */}
       <ConfirmModal
         isOpen={showDueReminder}
         variant="warning"
-        icon="⏰"
+        icon={<Icon name="clock" />}
         title="تذكير الاستحقاقات"
         message={`${dueReminderText()}\n\nهل تريد عرضها الآن؟`}
         confirmLabel="عرض المستحقات"
@@ -387,7 +387,7 @@ function Shell() {
       <ConfirmModal
         isOpen={showLogoutModal}
         variant="warning"
-        icon="🔒"
+        icon={<Icon name="lock" />}
         title="تسجيل الخروج وقفل التطبيق"
         message="هل تريد قفل التطبيق؟ ستحتاج إلى إدخال رمز الدخول PIN للوصول إلى النظام مجدداً."
         confirmLabel="قفل التطبيق الآن"

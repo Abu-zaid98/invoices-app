@@ -1,5 +1,6 @@
 import type { Invoice, Meta } from './types'
 import { currencySymbol, invoiceBalance, PAYMENT_META, PAYMENT_METHOD_META } from './types'
+import { formatDate } from './format'
 
 /** تنزيل النسخة الاحتياطية JSON */
 export function downloadJsonBackup(meta: Meta, invoices: Invoice[]): void {
@@ -34,7 +35,7 @@ export function downloadInvoicesCsv(invoices: Invoice[]): void {
   const lines = [header.map(csvCell).join(',')]
   const sorted = [...invoices].sort((a, b) => a.date - b.date)
   for (const inv of sorted) {
-    const date = new Date(inv.date).toLocaleDateString('en-US')
+    const date = formatDate(inv.date)
     const typeLabel = inv.type === 'purchase' ? 'شراء' : inv.type === 'credit' ? 'مرتجع' : 'بيع'
     const payLabel = PAYMENT_META[inv.paymentStatus ?? 'unpaid']?.label ?? ''
     const methodLabel = inv.payMethod ? PAYMENT_METHOD_META[inv.payMethod].label : ''

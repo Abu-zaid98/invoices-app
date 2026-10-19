@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import Modal from './ui/Modal'
+import Icon from './ui/Icon'
 
 interface Props {
   isOpen: boolean
@@ -29,20 +31,6 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
   const [hasDrawn, setHasDrawn] = useState(false)
   const [canUndo, setCanUndo] = useState(false)
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    if (!isOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
-    }
-  }, [isOpen, onClose])
 
   useEffect(() => {
     if (!isOpen) return
@@ -77,7 +65,7 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
         }
         img.src = initialSignature
       }
-    }, 30)
+    }, 40)
     return () => clearTimeout(t)
   }, [isOpen, initialSignature])
 
@@ -89,8 +77,6 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
     ctx.strokeStyle = penColor
     ctx.lineWidth = penWidth
   }, [penColor, penWidth, isOpen])
-
-  if (!isOpen) return null
 
   function pos(e: React.PointerEvent): { x: number; y: number } {
     const canvas = canvasRef.current!
@@ -237,169 +223,124 @@ export default function SignaturePad({ isOpen, initialSignature, onSave, onClose
   }
 
   return (
-    <>
-      <div
-        onClick={onClose}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 60,
-          background: 'rgba(0, 0, 0, 0.3)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-          animation: 'fadeIn .2s ease',
-        }}
-      />
-      <div
-        role="dialog" aria-modal="true" aria-label="التوقيع بخط اليد"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          position: 'fixed', top: '50%', left: '50%',
-          transform: 'translate(-50%,-50%)',
-          zIndex: 61,
-          width: 'calc(100% - 48px)', maxWidth: 380,
-          background: 'var(--modal-bg)',
-          backdropFilter: 'blur(40px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-          border: '0.5px solid var(--separator)',
-          borderRadius: '20px', padding: '24px 20px 20px',
-          boxShadow: '0 24px 80px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08)',
-          animation: 'scaleIn .25s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          direction: 'rtl',
-        }}
-      >
-        <h3 style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)', textAlign: 'center', marginBottom: 4 }}>
-          ✍️ التوقيع بخط اليد
-        </h3>
-        <p style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'center', marginBottom: 14, fontWeight: 400 }}>
-          وقّع بإصبعك أو بقلم الشاشة داخل المربع الأبيض
-        </p>
-
-        <div ref={wrapRef} style={{ width: '100%' }}>
-          <canvas
-            ref={canvasRef}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={endStroke}
-            onPointerCancel={endStroke}
-            onPointerLeave={endStroke}
-            style={{
-              display: 'block', width: '100%', height: CANVAS_H,
-              background: '#FFFFFF', borderRadius: '14px',
-              border: '0.5px solid var(--separator)',
-              boxShadow: 'var(--shadow-sm)',
-              touchAction: 'none', cursor: 'crosshair',
-            }}
-          />
-        </div>
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      variant="sheet"
+      size="lg"
+      title="التوقيع بخط اليد"
+      description="وقّع بإصبعك أو بقلم الشاشة داخل المربع الأبيض"
+      footer={
+        <>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              className="btn btn--secondary btn--sm"
+              style={{ flex: 1 }}
+              onClick={handleUndo}
+              disabled={!canUndo}
+            >
+              <Icon name="arrowLeft" />
+              تراجع
+            </button>
+            <button
+              type="button"
+              className="btn btn--tint-danger btn--sm"
+              style={{ flex: 1 }}
+              onClick={handleClear}
+            >
+              <Icon name="trash" />
+              مسح
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: 9 }}>
+            <button type="button" className="btn btn--primary" style={{ flex: 1 }} onClick={handleSave}>
+              <Icon name="check" />
+              حفظ التوقيع
+            </button>
+            <button type="button" className="btn btn--secondary" onClick={onClose}>
+              إلغاء
+            </button>
+          </div>
+        </>
+      }
+    >
+      <div ref={wrapRef} style={{ position: 'relative', width: '100%' }}>
+        <canvas
+          ref={canvasRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endStroke}
+          onPointerCancel={endStroke}
+          onPointerLeave={endStroke}
+          style={{
+            display: 'block', width: '100%', height: CANVAS_H,
+            background: '#FFFFFF', borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--separator)',
+            boxShadow: 'var(--shadow-sm)',
+            touchAction: 'none', cursor: 'crosshair',
+          }}
+        />
         {!hasDrawn && (
-          <div style={{
-            textAlign: 'center', fontSize: 12, color: 'var(--muted)',
-            marginTop: -CANVAS_H + 80, marginBottom: CANVAS_H - 95,
-            pointerEvents: 'none', height: 0,
-          }}>
+          <div
+            style={{
+              position: 'absolute', inset: 0, display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              pointerEvents: 'none', color: '#b9bec8', fontSize: 14, fontWeight: 600,
+            }}
+          >
             ✍️ وقّع هنا
           </div>
         )}
+      </div>
 
-        {error && (
-          <div style={{
-            marginTop: 10, fontSize: 12.5, fontWeight: 500, color: '#FF3B30',
-            background: 'rgba(255, 59, 48, 0.08)', border: '0.5px solid rgba(255, 59, 48, 0.2)',
-            borderRadius: '10px', padding: '8px 12px', textAlign: 'center',
-          }}>
-            ⚠️ {error}
-          </div>
-        )}
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 14 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {PEN_COLORS.map((c) => (
-              <button
-                key={c.value}
-                title={c.label}
-                onClick={() => setPenColor(c.value)}
-                style={{
-                  width: 30, height: 30, borderRadius: '50%',
-                  background: c.value,
-                  border: penColor === c.value ? '2px solid #007AFF' : '0.5px solid var(--separator)',
-                  cursor: 'pointer',
-                  boxShadow: penColor === c.value ? '0 0 0 3px rgba(0, 122, 255, 0.15)' : 'none',
-                }}
-              />
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {PEN_WIDTHS.map((w) => (
-              <button
-                key={w}
-                onClick={() => setPenWidth(w)}
-                title={`سماكة ${w}`}
-                style={{
-                  width: 34, height: 30, borderRadius: '10px',
-                  border: penWidth === w ? '1px solid #007AFF' : '0.5px solid var(--separator)',
-                  background: penWidth === w ? 'rgba(0, 122, 255, 0.08)' : 'var(--modal-field)',
-                  cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >
-                <span style={{ width: 18, height: w, borderRadius: 99, background: 'var(--text)' }} />
-              </button>
-            ))}
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 14 }}>
+        <div style={{ display: 'flex', gap: 6 }} role="group" aria-label="لون القلم">
+          {PEN_COLORS.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              title={c.label}
+              aria-label={c.label}
+              aria-pressed={penColor === c.value}
+              onClick={() => setPenColor(c.value)}
+              style={{
+                width: 32, height: 32, borderRadius: '50%',
+                background: c.value,
+                border: penColor === c.value ? '2px solid #007AFF' : '1px solid var(--separator)',
+                cursor: 'pointer',
+                boxShadow: penColor === c.value ? '0 0 0 3px var(--ring)' : 'none',
+              }}
+            />
+          ))}
         </div>
-
-        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-          <button
-            onClick={handleUndo}
-            disabled={!canUndo}
-            style={{
-              flex: 1, padding: '10px', borderRadius: '12px',
-              border: '0.5px solid var(--separator)', background: 'var(--modal-field)',
-              color: canUndo ? 'var(--text)' : 'var(--muted)',
-              fontSize: 13, fontWeight: 500, cursor: canUndo ? 'pointer' : 'default',
-              fontFamily: 'inherit', opacity: canUndo ? 1 : 0.5,
-            }}
-          >
-            ↩️ تراجع
-          </button>
-          <button
-            onClick={handleClear}
-            style={{
-              flex: 1, padding: '10px', borderRadius: '12px',
-              border: '0.5px solid rgba(255, 59, 48, 0.3)', background: 'rgba(255, 59, 48, 0.06)',
-              color: '#FF3B30', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            🧹 مسح
-          </button>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
-          <button
-            onClick={handleSave}
-            style={{
-              width: '100%', padding: '12px', borderRadius: '14px', border: 'none',
-              background: '#007AFF', color: '#fff', fontSize: 15, fontWeight: 600,
-              letterSpacing: '-0.01em', cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(0, 122, 255, 0.25)',
-              fontFamily: 'inherit', transition: 'all 0.15s ease',
-            }}
-          >
-            💾 حفظ التوقيع
-          </button>
-          <button
-            onClick={onClose}
-            style={{
-              width: '100%', padding: '12px', borderRadius: '14px',
-              border: '0.5px solid var(--separator)', background: 'var(--modal-field)',
-              color: 'var(--text)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
-              fontFamily: 'inherit', transition: 'all 0.15s ease',
-            }}
-          >
-            إلغاء
-          </button>
+        <div style={{ display: 'flex', gap: 6 }} role="group" aria-label="سماكة القلم">
+          {PEN_WIDTHS.map((w) => (
+            <button
+              key={w}
+              type="button"
+              onClick={() => setPenWidth(w)}
+              title={`سماكة ${w}`}
+              aria-pressed={penWidth === w}
+              className="btn btn--sm"
+              style={{
+                width: 38, padding: 0,
+                borderColor: penWidth === w ? 'var(--brand)' : 'var(--border)',
+                background: penWidth === w ? 'var(--brand-soft)' : 'var(--chip)',
+              }}
+            >
+              <span style={{ width: 18, height: w, borderRadius: 99, background: 'var(--text)' }} />
+            </button>
+          ))}
         </div>
       </div>
-    </>
+
+      {error && (
+        <div className="error-text" style={{ marginTop: 12 }}>
+          <Icon name="alert" />
+          {error}
+        </div>
+      )}
+    </Modal>
   )
 }

@@ -11,7 +11,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['icon-192.png', 'icon-512.png'],
+      includeAssets: ['icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon.svg'],
       manifest: {
         id: './',
         name: 'فواتيري',

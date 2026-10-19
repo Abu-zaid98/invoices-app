@@ -1,9 +1,8 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
+import { useCallback, useContext, useRef, useState, type ReactNode } from 'react'
+import Icon from '../components/ui/Icon'
+import { ToastContext, type ToastAction, type ToastContextValue } from './contexts/toast'
 
-export interface ToastAction {
-  label: string
-  onClick: () => void
-}
+export type { ToastAction, ToastContextValue }
 
 interface ToastItem {
   id: number
@@ -12,53 +11,99 @@ interface ToastItem {
   action?: ToastAction
 }
 
-interface ToastContextValue {
-  toast: (message: string, kind?: 'success' | 'danger', action?: ToastAction) => void
-}
-
-const ToastContext = createContext<ToastContextValue | null>(null)
-
 let counter = 0
 
+/** مدد العرض — قصيرة قدر الإمكان بلا فقدان المعنى */
+const DURATION = 2200
+const DURATION_ACTION = 5000
+/** أقصى عدد إشعارات ظاهرة في وقت واحد */
+const MAX_TOASTS = 3
+
+/**
+ * ToastProvider — إشعارات مختصرة.
+ * - رسالة مكررة أثناء ظهورها لا تُضاعف (تُمدَّد مدتها فقط) لتقليل الضجيج.
+ * - حدّ أعلى 3 إشعارات، والأقدم يُزال تلقائياً.
+ * - أخطاء/تنبيهات بلا حدّ (kind='danger' لا تُدمج مع success).
+ */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([])
+  const timers = useRef(new Map<number, number>())
+  /** نص الرسالة → رقم الإشعار الظاهر (لمنع التكرار) */
+  const live = useRef(new Map<string, number>())
 
-  const dismiss = useCallback((id: number) => {
-    setItems((prev) => prev.filter((i) => i.id !== id))
+  const remove = useCallback((id: number) => {
+    const t = timers.current.get(id)
+    if (t) {
+      window.clearTimeout(t)
+      timers.current.delete(id)
+    }
+    for (const [msg, tid] of live.current) {
+      if (tid === id) live.current.delete(msg)
+    }
+    setItems((prev) => (prev.some((i) => i.id === id) ? prev.filter((i) => i.id !== id) : prev))
   }, [])
 
-  const toast = useCallback((message: string, kind: 'success' | 'danger' = 'success', action?: ToastAction) => {
-    const id = ++counter
-    setItems((prev) => [...prev, { id, message, kind, action }])
-    // مهلة أطول عند وجود زر إجراء (تراجع)
-    setTimeout(() => dismiss(id), action ? 6000 : 2500)
-  }, [dismiss])
+  const scheduleDismiss = useCallback(
+    (id: number, ms: number) => {
+      const t = window.setTimeout(() => remove(id), ms)
+      timers.current.set(id, t)
+    },
+    [remove],
+  )
+
+  const toast = useCallback(
+    (message: string, kind: 'success' | 'danger' = 'success', action?: ToastAction) => {
+      const duration = action ? DURATION_ACTION : DURATION
+
+      // رسالة مطابقة ظاهرة الآن → لا تُضاف مرة أخرى، نُجدّد مدتها فقط
+      const existing = live.current.get(message)
+      if (existing != null) {
+        const t = timers.current.get(existing)
+        if (t) window.clearTimeout(t)
+        scheduleDismiss(existing, duration)
+        return
+      }
+
+      const id = ++counter
+      live.current.set(message, id)
+      setItems((prev) => {
+        const next = [...prev, { id, message, kind, action }]
+        if (next.length > MAX_TOASTS) {
+          const overflow = next.splice(0, next.length - MAX_TOASTS)
+          for (const old of overflow) {
+            const t = timers.current.get(old.id)
+            if (t) {
+              window.clearTimeout(t)
+              timers.current.delete(old.id)
+            }
+            for (const [msg, tid] of live.current) {
+              if (tid === old.id) live.current.delete(msg)
+            }
+          }
+        }
+        return next
+      })
+      scheduleDismiss(id, duration)
+    },
+    [scheduleDismiss],
+  )
 
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed bottom-24 left-0 right-0 z-[999] flex flex-col items-center gap-2 pointer-events-none">
+      <div className="toast-wrap" role="status" aria-live="polite">
         {items.map((i) => (
-          <div
-            key={i.id}
-            className={`pointer-events-auto flex max-w-[92%] items-center gap-3 rounded-2xl px-5 py-2.5 text-sm font-bold text-white shadow-xl ${
-              i.kind === 'danger'
-                ? 'bg-gradient-to-br from-red-500/95 to-red-700/95'
-                : 'bg-gradient-to-br from-emerald-500/95 to-blue-500/95'
-            }`}
-          >
-            <span>
-              {i.kind === 'danger' ? '⚠️ ' : '✅ '}
-              {i.message}
-            </span>
+          <div key={i.id} className={`toast toast--${i.kind}`}>
+            <Icon name={i.kind === 'danger' ? 'alert' : 'checkCircle'} />
+            <span>{i.message}</span>
             {i.action && (
               <button
+                type="button"
+                className="toast-action"
                 onClick={() => {
                   i.action!.onClick()
-                  dismiss(i.id)
+                  remove(i.id)
                 }}
-                className="shrink-0 rounded-lg bg-white/20 px-3 py-1 text-xs font-black hover:bg-white/30 transition-colors"
-                style={{ fontFamily: 'inherit' }}
               >
                 {i.action.label}
               </button>

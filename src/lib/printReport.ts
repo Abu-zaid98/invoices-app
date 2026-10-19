@@ -1,5 +1,6 @@
 import type { Invoice, Meta } from './types'
 import { convert, currencySymbol, invoiceBalance, PAYMENT_META } from './types'
+import { formatDate } from './format'
 
 /**
  * كشف العمليات PDF — جدول بسيط لفترة زمنية (كل العمليات أو عميل/مورد معين).
@@ -25,7 +26,7 @@ function fmt(n: number) {
 }
 
 function fmtDate(ts: number) {
-  return new Date(ts).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  return formatDate(ts)
 }
 
 export function buildOperationsHTML(

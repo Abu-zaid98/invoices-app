@@ -3,6 +3,8 @@ import type { Invoice, Meta } from '../lib/types'
 import { exportInvoicePNG, buildInvoiceHTML } from '../lib/printInvoice'
 import { downloadInvoicePdf } from '../lib/invoicePdf'
 import { getInvoiceQR } from '../lib/qr'
+import Modal from './ui/Modal'
+import Icon, { type IconName } from './ui/Icon'
 
 interface Props {
   invoice: Invoice
@@ -12,16 +14,17 @@ interface Props {
 
 type ExportState = 'idle' | 'loading' | 'success' | 'error'
 
+/** تصدير الفاتورة PDF/PNG/طباعة — Bottom Sheet بأزرار إجراءات واضحة وحالات تحميل */
 export default function ExportModal({ invoice, meta, onClose }: Props) {
   const [pdfState, setPdfState] = useState<ExportState>('idle')
   const [pngState, setPngState] = useState<ExportState>('idle')
   const [printState, setPrintState] = useState<ExportState>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
-  async function handleExport(
-    type: 'pdf' | 'png' | 'print',
-    setter: (s: ExportState) => void,
-  ) {
+  const busy = pdfState === 'loading' || pngState === 'loading' || printState === 'loading'
+
+  async function handleExport(type: 'pdf' | 'png' | 'print', setter: (s: ExportState) => void) {
+    if (busy) return
     setter('loading')
     setErrorMsg('')
     try {
@@ -49,189 +52,137 @@ export default function ExportModal({ invoice, meta, onClose }: Props) {
   const invNum = String(invoice.id).padStart(4, '0')
 
   return (
-    <>
-      <div
-        onClick={onClose}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 50,
-          background: 'rgba(0, 0, 0, 0.3)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
-        }}
-      />
-      <div
-        style={{
-          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 51,
-          display: 'flex', justifyContent: 'center',
-        }}
-      >
-        <div
-          style={{
-            width: '100%', maxWidth: 480,
-            borderRadius: '20px 20px 0 0',
-            padding: '20px 20px 36px',
-            background: 'var(--modal-bg)',
-            backdropFilter: 'blur(40px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-            border: '0.5px solid var(--separator)',
-            borderBottom: 'none',
-            boxShadow: '0 -12px 40px rgba(0, 0, 0, 0.1)',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div style={{
-            width: 40, height: 4,
-            background: 'var(--separator)',
-            borderRadius: 999,
-            margin: '0 auto 20px',
-          }} />
-
-          <div style={{ textAlign: 'center', marginBottom: 20 }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: '50%',
-              background: 'rgba(0, 122, 255, 0.12)',
-              border: '1px solid rgba(0, 122, 255, 0.25)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 12px', fontSize: 24,
-            }}>📄</div>
-            <div style={{
-              fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)',
-              marginBottom: 4,
-            }}>
-              تصدير الفاتورة
-            </div>
-            <div style={{ color: 'var(--muted)', fontSize: 13, fontWeight: 400 }}>
-              فاتورة رقم{' '}
-              <span style={{ color: 'var(--text)', fontWeight: 600 }}>#{invNum}</span>
-              {' — '}
-              <span style={{ color: 'var(--text)', fontWeight: 600 }}>{invoice.party}</span>
-            </div>
-          </div>
-
-          {errorMsg && (
-            <div style={{
-              background: 'rgba(255, 59, 48, 0.08)',
-              border: '0.5px solid rgba(255, 59, 48, 0.2)',
-              borderRadius: '12px', padding: '10px 14px',
-              fontSize: 13, fontWeight: 500, color: '#FF3B30',
-              marginBottom: 14, textAlign: 'center', direction: 'rtl',
-            }}>
-              ⚠️ {errorMsg}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <ExportBtn
-              icon="📄"
-              label="تحميل PDF"
-              sub="ملف حقيقي A4 قابل للمشاركة والأرشفة"
-              gradient="linear-gradient(135deg,#007AFF,#5856D6)"
-              state={pdfState}
-              onClick={() => handleExport('pdf', setPdfState)}
-            />
-            <ExportBtn
-              icon="🖼️"
-              label="تحميل PNG"
-              sub="صورة عالية الدقة للمشاركة والأرشفة"
-              gradient="linear-gradient(135deg,#34C759,#30D158)"
-              state={pngState}
-              onClick={() => handleExport('png', setPngState)}
-            />
-            <ExportBtn
-              icon="🖨️"
-              label="طباعة مباشرة"
-              sub="افتح نافذة الطباعة في المتصفح"
-              gradient="linear-gradient(135deg,#FF9500,#FFCC00)"
-              state={printState}
-              onClick={() => handleExport('print', setPrintState)}
-            />
-          </div>
-
-          <button
-            onClick={onClose}
-            style={{
-              marginTop: 14, width: '100%', padding: '13px', borderRadius: '14px',
-              border: '0.5px solid var(--separator)', background: 'var(--modal-field)',
-              color: 'var(--text)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
-              fontFamily: 'inherit', transition: 'all 0.15s ease',
-            }}
-          >
-            إغلاق
-          </button>
+    <Modal
+      open
+      onClose={onClose}
+      variant="sheet"
+      busy={busy}
+      title="تصدير الفاتورة"
+      description={<>فاتورة رقم <b style={{ color: 'var(--text)' }}>#{invNum}</b> — {invoice.party}</>}
+      icon={<Icon name="download" />}
+      iconTone="info"
+      footer={
+        <button type="button" className="btn btn--secondary btn--block" onClick={onClose} disabled={busy}>
+          إغلاق
+        </button>
+      }
+    >
+      {errorMsg && (
+        <div className="error-text" style={{ marginBottom: 12 }}>
+          <Icon name="alert" />
+          {errorMsg}
         </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <ExportBtn
+          icon="file"
+          label="تحميل PDF"
+          sub="ملف A4 قابل للمشاركة والأرشفة"
+          gradient="linear-gradient(135deg,#007AFF,#5856D6)"
+          state={pdfState}
+          disabled={busy && pdfState !== 'loading'}
+          onClick={() => handleExport('pdf', setPdfState)}
+        />
+        <ExportBtn
+          icon="image"
+          label="تحميل PNG"
+          sub="صورة عالية الدقة للمشاركة"
+          gradient="linear-gradient(135deg,#34C759,#1fa94a)"
+          state={pngState}
+          disabled={busy && pngState !== 'loading'}
+          onClick={() => handleExport('png', setPngState)}
+        />
+        <ExportBtn
+          icon="printer"
+          label="طباعة مباشرة"
+          sub="افتح نافذة الطباعة في المتصفح"
+          gradient="linear-gradient(135deg,#FF9500,#ffb020)"
+          state={printState}
+          disabled={busy && printState !== 'loading'}
+          onClick={() => handleExport('print', setPrintState)}
+        />
       </div>
-    </>
+    </Modal>
   )
 }
 
 function ExportBtn({
-  icon, label, sub, gradient, state, onClick,
+  icon, label, sub, gradient, state, disabled, onClick,
 }: {
-  icon: string
+  icon: IconName
   label: string
   sub: string
   gradient: string
   state: ExportState
+  disabled: boolean
   onClick: () => void
 }) {
-  const disabled = state === 'loading'
-
+  const loading = state === 'loading'
   const bg =
-    state === 'success' ? 'linear-gradient(135deg,#34C759,#30D158)' :
-    state === 'error'   ? 'linear-gradient(135deg,#FF3B30,#FF453A)' :
+    state === 'success' ? 'linear-gradient(135deg,#34C759,#1fa94a)' :
+    state === 'error' ? 'linear-gradient(135deg,#FF3B30,#e0332a)' :
     gradient
 
   return (
     <button
+      type="button"
       disabled={disabled}
       onClick={onClick}
       style={{
-        width: '100%', display: 'grid',
+        width: '100%',
+        display: 'grid',
         gridTemplateColumns: 'auto 1fr auto',
-        alignItems: 'center', gap: 12,
-        padding: '14px 16px', borderRadius: '16px', border: 'none',
-        background: bg, color: '#fff',
+        alignItems: 'center',
+        gap: 12,
+        padding: '14px 16px',
+        borderRadius: 'var(--radius-lg)',
+        border: 'none',
+        background: bg,
+        color: '#fff',
         cursor: disabled ? 'default' : 'pointer',
-        opacity: disabled ? 0.75 : 1,
-        transition: 'transform .15s ease, box-shadow .15s ease',
-        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
-        fontFamily: 'inherit', direction: 'rtl', textAlign: 'right',
+        opacity: disabled ? 0.55 : 1,
+        transition: 'transform .15s ease, opacity .15s ease',
+        boxShadow: 'var(--shadow-sm)',
+        fontFamily: 'inherit',
+        textAlign: 'right',
       }}
     >
-      <span style={{ fontSize: 22, lineHeight: 1 }}>
-        {state === 'loading' ? <Spinner /> :
-         state === 'success' ? '✅' :
-         state === 'error'   ? '❌' : icon}
+      <span style={{ display: 'flex', alignItems: 'center' }}>
+        {loading ? <Spinner /> :
+          state === 'success' ? <Icon name="checkCircle" /> :
+          state === 'error' ? <Icon name="alert" /> : <Icon name={icon} />}
       </span>
-
       <span style={{ textAlign: 'right' }}>
-        {state === 'loading' ? (
-          <span style={{ fontSize: 14, fontWeight: 600 }}>جارٍ التصدير…</span>
+        {loading ? (
+          <span style={{ fontSize: 14, fontWeight: 700 }}>جارٍ التصدير…</span>
         ) : state === 'success' ? (
-          <span style={{ fontSize: 14, fontWeight: 600 }}>تم بنجاح!</span>
+          <span style={{ fontSize: 14, fontWeight: 700 }}>تم بنجاح!</span>
         ) : state === 'error' ? (
-          <span style={{ fontSize: 14, fontWeight: 600 }}>فشل التصدير</span>
+          <span style={{ fontSize: 14, fontWeight: 700 }}>فشل التصدير</span>
         ) : (
           <>
-            <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.3 }}>{label}</div>
-            <div style={{ fontSize: 11.5, opacity: 0.8, marginTop: 2, fontWeight: 400 }}>{sub}</div>
+            <div style={{ fontSize: 14.5, fontWeight: 750, lineHeight: 1.3 }}>{label}</div>
+            <div style={{ fontSize: 11.5, opacity: 0.85, marginTop: 2, fontWeight: 400 }}>{sub}</div>
           </>
         )}
       </span>
-
-      <span style={{ fontSize: 15, opacity: 0.6, direction: 'ltr' }}>→</span>
+      <span style={{ display: 'flex', opacity: 0.7 }}>
+        <Icon name="chevronLeft" size={18} />
+      </span>
     </button>
   )
 }
 
 function Spinner() {
   return (
-    <span style={{
-      display: 'inline-block', width: 20, height: 20,
-      border: '2.5px solid rgba(255,255,255,0.3)',
-      borderTopColor: '#fff', borderRadius: '50%',
-      animation: 'spin .7s linear infinite',
-      verticalAlign: 'middle',
-    }} />
+    <span
+      style={{
+        display: 'inline-block', width: 20, height: 20,
+        border: '2.5px solid rgba(255,255,255,0.3)',
+        borderTopColor: '#fff', borderRadius: '50%',
+        animation: 'spin .7s linear infinite',
+      }}
+    />
   )
 }

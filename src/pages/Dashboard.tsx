@@ -1,34 +1,66 @@
 import { useAppData } from '../lib/AppDataContext'
-import { convert, currencySymbol, isOverdue, totalPayable, totalReceivable } from '../lib/types'
+import { convert, currencySymbol, invoiceBalance, isOverdue, PAYMENT_META, totalPayable, totalReceivable } from '../lib/types'
 import type { Invoice } from '../lib/types'
+import { formatDate } from '../lib/format'
+import Icon from '../components/ui/Icon'
+import type { IconName } from '../components/ui/Icon'
 
-function InvoiceRow({ inv }: { inv: Invoice }) {
+interface Props {
+  onOpenInvoice?: (id: number) => void
+  onOpenOverdue?: () => void
+  onOpenInvoices?: () => void
+}
+
+const TYPE_META: Record<Invoice['type'], { icon: IconName; tone: string; label: string; color: string }> = {
+  purchase: { icon: 'download', tone: 'g-amber', label: 'شراء', color: 'var(--warning)' },
+  sale: { icon: 'upload', tone: 'g-blue', label: 'بيع', color: 'var(--accent)' },
+  credit: { icon: 'refresh', tone: 'g-violet', label: 'مرتجع', color: 'var(--violet)' },
+}
+
+function InvoiceRow({ inv, onOpen }: { inv: Invoice; onOpen?: (id: number) => void }) {
   const credit = inv.type === 'credit'
+  const meta = TYPE_META[inv.type]
+  const bal = invoiceBalance(inv)
+  const st = PAYMENT_META[inv.paymentStatus ?? 'unpaid']
+  const late = isOverdue(inv)
   return (
-    <div className="flex items-center justify-between border-b border-[var(--border)] py-3 last:border-b-0">
-      <div>
-        <div>{inv.party || '-'}</div>
-        <div className="text-xs text-[var(--muted)]">
-          {new Date(inv.date).toLocaleDateString('en-US')} ·{' '}
-          <span
-            className={`rounded-full px-2 py-0.5 text-[11px] ${
-              credit
-                ? 'bg-violet-500/20 text-violet-300'
-                : inv.type === 'purchase' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'
-            }`}
-          >
-            {credit ? '↩️ مرتجع' : inv.type === 'purchase' ? 'شراء' : 'بيع'}
+    <button type="button" className="row" onClick={() => onOpen?.(inv.id)} style={{ cursor: onOpen ? 'pointer' : 'default' }}>
+      <span className={`stat-icon ${meta.tone}`}>
+        <Icon name={meta.icon} />
+      </span>
+      <span className="row-main">
+        <span className="row-title truncate" style={{ display: 'block' }}>
+          {inv.party || '-'}
+        </span>
+        <span className="row-sub" style={{ display: 'block' }}>
+          {formatDate(inv.date)} · {meta.label}
+          {!credit && bal > 0 && !late && ` · ${st.label}`}
+        </span>
+      </span>
+      <span className="row-end">
+        <span
+          className="amount"
+          style={{ display: 'block', color: credit ? 'var(--violet)' : 'var(--text)' }}
+        >
+          {credit ? '− ' : ''}
+          {inv.total.toLocaleString('en-US')} {currencySymbol(inv.currency)}
+        </span>
+        {late && (
+          <span className="badge badge--danger" style={{ marginTop: 3 }}>
+            متأخرة
           </span>
-        </div>
-      </div>
-      <div className={`font-extrabold ${credit ? 'text-violet-300' : 'accent-text'}`}>
-        {credit ? '− ' : ''}{inv.total.toLocaleString('en-US')} {currencySymbol(inv.currency)}
-      </div>
-    </div>
+        )}
+        {!late && !credit && bal > 0 && (
+          <span className={`badge ${inv.paymentStatus === 'partial' ? 'badge--warning' : 'badge--danger'}`} style={{ marginTop: 3 }}>
+            {bal.toLocaleString('en-US')} {currencySymbol(inv.currency)}
+          </span>
+        )}
+      </span>
+    </button>
   )
 }
 
-export default function Dashboard() {
+export default function Dashboard({ onOpenInvoice, onOpenOverdue, onOpenInvoices }: Props) {
   const { meta, invoices } = useAppData()
   const purchases = invoices.filter((i) => i.type === 'purchase')
   const sales = invoices.filter((i) => i.type === 'sale')
@@ -40,78 +72,144 @@ export default function Dashboard() {
   // مستحق لك = أرصدة البيع ناقص إشعاراتها، مستحق عليك = أرصدة الشراء ناقص مرتجعاتها
   const receivable = totalReceivable(invoices, dispCur, meta.rates)
   const payable = totalPayable(invoices, dispCur, meta.rates)
+  const profit = totalSale - totalPurchase
+
+  const recent = [...invoices].reverse().slice(0, 5)
 
   return (
-    <div>
+    <div className="stack">
       {overdue.length > 0 && (
-        <div
-          className="mb-2.5 rounded-2xl border border-red-500/40 p-3.5 text-center"
-          style={{ background: 'linear-gradient(135deg, rgba(220,38,38,.15), rgba(220,38,38,.05))' }}
+        <button
+          type="button"
+          className="card card--pad card-interactive"
+          onClick={onOpenOverdue}
+          style={{
+            textAlign: 'right',
+            borderColor: 'transparent',
+            background: 'linear-gradient(135deg, var(--danger-soft), transparent 70%), var(--card)',
+          }}
         >
-          <div className="text-sm font-black text-red-300">
-            ⚠️ لديك {overdue.length} {overdue.length === 1 ? 'فاتورة متأخرة' : 'فواتير متأخرة'}
+          <div className="inline">
+            <span className="stat-icon g-red">
+              <Icon name="alert" />
+            </span>
+            <span className="grow">
+              <span className="row-title" style={{ display: 'block', color: 'var(--danger)' }}>
+                {overdue.length} {overdue.length === 1 ? 'فاتورة متأخرة' : 'فواتير متأخرة'}
+              </span>
+              <span className="row-sub" style={{ display: 'block' }}>
+                تجاوزت تاريخ الاستحقاق ولم تُسدَّد بالكامل
+              </span>
+            </span>
+            <Icon name="chevronLeft" size={18} style={{ color: 'var(--muted)' }} />
           </div>
-          <div className="mt-0.5 text-xs text-[var(--muted)]">
-            تجاوزت تاريخ الاستحقاق ولم تُسدَّد بالكامل — راجع قائمة الفواتير (فلتر ⚠️ متأخرة)
-          </div>
-        </div>
+        </button>
       )}
-      {/* Debts row */}
-      <div className="mb-2.5 grid grid-cols-2 gap-2.5">
-        <div className="card p-4 text-center">
-          <div className="stat-ic g-green">💰</div>
-          <div className="text-lg font-black text-emerald-400">
-            {receivable.toLocaleString('en-US')} {currencySymbol(dispCur)}
+
+      {/* الأرصدة */}
+      <div className="grid-2">
+        <div className="card card--pad">
+          <span className="stat-icon g-green">
+            <Icon name="wallet" />
+          </span>
+          <div className="amount-lg" style={{ marginTop: 10, color: 'var(--success)' }}>
+            {receivable.toLocaleString('en-US')}
+            <span style={{ fontSize: 13, fontWeight: 700 }}> {currencySymbol(dispCur)}</span>
           </div>
-          <div className="mt-0.5 text-xs text-[var(--muted)]">مستحق لك (ديون العملاء)</div>
+          <div className="stat-label" style={{ marginTop: 3 }}>مستحق لك</div>
+          <div className="t-caption">ديون العملاء</div>
         </div>
-        <div className="card p-4 text-center">
-          <div className="stat-ic g-red">🧾</div>
-          <div className="text-lg font-black text-red-400">
-            {payable.toLocaleString('en-US')} {currencySymbol(dispCur)}
+        <div className="card card--pad">
+          <span className="stat-icon g-red">
+            <Icon name="receipt" />
+          </span>
+          <div className="amount-lg" style={{ marginTop: 10, color: 'var(--danger)' }}>
+            {payable.toLocaleString('en-US')}
+            <span style={{ fontSize: 13, fontWeight: 700 }}> {currencySymbol(dispCur)}</span>
           </div>
-          <div className="mt-0.5 text-xs text-[var(--muted)]">مستحق عليك (ديون الموردين)</div>
+          <div className="stat-label" style={{ marginTop: 3 }}>مستحق عليك</div>
+          <div className="t-caption">ديون الموردين</div>
         </div>
       </div>
-      <div className="mb-2 grid grid-cols-2 gap-2.5">
-        <div className="card p-4 text-center">
-          <div className="stat-ic g-amber">📥</div>
-          <div className="accent-text text-xl font-black">{purchases.length}</div>
-          <div className="text-xs text-[var(--muted)]">فواتير الشراء</div>
-          <div className="mt-1 text-sm font-bold">
+
+      {/* عدد الفواتير */}
+      <div className="grid-2">
+        <div className="card card--pad">
+          <div className="row-between">
+            <span className="stat-icon g-amber">
+              <Icon name="download" />
+            </span>
+            <span className="amount-lg" style={{ color: 'var(--warning)' }}>{purchases.length}</span>
+          </div>
+          <div className="stat-label" style={{ marginTop: 10 }}>فواتير الشراء</div>
+          <div className="t-caption">
             {totalPurchase.toLocaleString('en-US')} {currencySymbol(dispCur)}
           </div>
         </div>
-        <div className="card p-4 text-center">
-          <div className="stat-ic g-blue">📤</div>
-          <div className="accent-text text-xl font-black">{sales.length}</div>
-          <div className="text-xs text-[var(--muted)]">فواتير البيع</div>
-          <div className="mt-1 text-sm font-bold">
+        <div className="card card--pad">
+          <div className="row-between">
+            <span className="stat-icon g-blue">
+              <Icon name="upload" />
+            </span>
+            <span className="amount-lg" style={{ color: 'var(--brand)' }}>{sales.length}</span>
+          </div>
+          <div className="stat-label" style={{ marginTop: 10 }}>فواتير البيع</div>
+          <div className="t-caption">
             {totalSale.toLocaleString('en-US')} {currencySymbol(dispCur)}
           </div>
         </div>
-        <div className="card col-span-2 flex flex-col items-center p-5 text-center">
-          <div className="stat-ic g-violet">💰</div>
-          <div className="accent-text text-2xl font-black">
-            {(totalSale - totalPurchase).toLocaleString('en-US')} {currencySymbol(dispCur)}
+      </div>
+
+      {/* هامش الربح */}
+      <div className="card card--pad card--tint">
+        <div className="inline">
+          <span className="stat-icon g-violet">
+            <Icon name="trendingUp" />
+          </span>
+          <div className="grow">
+            <div className="stat-label">هامش الربح التقديري</div>
+            <div className="amount-lg" style={{ color: 'var(--violet)', marginTop: 2 }}>
+              {profit.toLocaleString('en-US')}
+              <span style={{ fontSize: 13, fontWeight: 700 }}> {currencySymbol(dispCur)}</span>
+            </div>
           </div>
-          <div className="mt-0.5 text-xs text-[var(--muted)]">هامش الربح التقديري</div>
         </div>
       </div>
+
       {mixedCur && (
-        <p className="mb-4 text-xs text-[var(--muted)]">
-          💱 تم تحويل بعض الفواتير من عملات مختلفة حسب أسعار الصرف في الإعدادات
+        <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0 }}>
+          <Icon name="refresh" size={14} />
+          تم تحويل بعض الفواتير من عملات مختلفة حسب أسعار الصرف في الإعدادات
         </p>
       )}
-      <div className="card p-4">
-        <h3 className="mb-2 font-bold">آخر الفواتير</h3>
-        {invoices.length === 0 && <p className="py-6 text-center text-[var(--muted)]">لا توجد فواتير بعد</p>}
-        {invoices
-          .slice(-5)
-          .reverse()
-          .map((inv) => (
-            <InvoiceRow key={inv.id} inv={inv} />
-          ))}
+
+      {/* آخر الفواتير */}
+      <div className="section-head">
+        <span className="section-title">آخر الفواتير</span>
+        {invoices.length > 0 && onOpenInvoices && (
+          <button type="button" className="btn btn--ghost btn--sm" onClick={onOpenInvoices}>
+            عرض الكل
+            <Icon name="chevronLeft" size={16} />
+          </button>
+        )}
+      </div>
+
+      <div className="card card--flush">
+        {recent.length === 0 ? (
+          <div className="empty">
+            <span className="empty-icon">
+              <Icon name="receipt" />
+            </span>
+            <div className="empty-title">لا توجد فواتير بعد</div>
+            <div className="empty-text">ابدأ بإنشاء أول فاتورة بيع أو شراء من الزر المركزي بالأسفل.</div>
+          </div>
+        ) : (
+          <div className="list list-tappable" style={{ padding: '4px 0' }}>
+            {recent.map((inv) => (
+              <InvoiceRow key={inv.id} inv={inv} onOpen={onOpenInvoice} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

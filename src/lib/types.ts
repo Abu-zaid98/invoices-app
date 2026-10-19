@@ -1,3 +1,5 @@
+import type { InvoiceDesign } from './invoiceDesign'
+
 export type InvoiceType = 'purchase' | 'sale' | 'credit'
 
 /** جهة الإشعار الدائن: يعوّض مبيعاً (دائن للعميل) أو مشتريات (مرتجع للمورد) */
@@ -84,8 +86,10 @@ export interface Meta {
   lastBackupAt: number | null
   /** قفل تلقائي بعد خمول بالدقائق — 0 يعطّل */
   autoLockMinutes: number
-  /** قالب الطباعة: حديث (متدرج) أو كلاسيكي (رسمي أبيض) */
+  /** قالب الطباعة القديم (يُشتق منه التصميم عند غياب invoiceDesign) */
   printTemplate: 'modern' | 'classic'
+  /** تصميم الفواتير الكامل: القالب + الألوان + عناصر الإظهار */
+  invoiceDesign?: InvoiceDesign
   /** الشروط الافتراضية تُطبع في كل فاتورة */
   defaultTerms: string
 }

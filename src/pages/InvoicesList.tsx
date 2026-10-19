@@ -3,12 +3,21 @@ import { useAppData } from '../lib/AppDataContext'
 import { useToast } from '../lib/useToast'
 import { currencySymbol, invoiceBalance, isOverdue, PAYMENT_META } from '../lib/types'
 import type { Invoice } from '../lib/types'
+import { formatDate } from '../lib/format'
+import DatePicker from '../components/DatePicker'
 import DeleteConfirmModal from '../components/DeleteConfirmModal'
 import PaymentModal from '../components/PaymentModal'
 import Select from '../components/Select'
+import Icon, { type IconName } from '../components/ui/Icon'
 
 type Filter = 'all' | 'purchase' | 'sale' | 'credit'
 export type PayFilter = 'all' | 'paid' | 'partial' | 'unpaid' | 'overdue'
+
+const TYPE_META: Record<Invoice['type'], { icon: IconName; tone: string; label: string }> = {
+  purchase: { icon: 'download', tone: 'g-amber', label: 'شراء' },
+  sale: { icon: 'upload', tone: 'g-blue', label: 'بيع' },
+  credit: { icon: 'refresh', tone: 'g-violet', label: 'مرتجع' },
+}
 
 export default function InvoicesList({ onOpen, initialPayFilter = 'all' }: { onOpen: (id: number) => void; initialPayFilter?: PayFilter }) {
   const { meta, invoices, trashInvoice, restoreInvoice, recordPayment } = useAppData()
@@ -19,6 +28,7 @@ export default function InvoicesList({ onOpen, initialPayFilter = 'all' }: { onO
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [curFilter, setCurFilter] = useState('all')
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   // Confirm-delete state
   const [pendingDelete, setPendingDelete] = useState<Invoice | null>(null)
@@ -58,7 +68,7 @@ export default function InvoicesList({ onOpen, initialPayFilter = 'all' }: { onO
     setPendingDelete(null)
     setOpenSwipeId(null)
     toast('نُقلت الفاتورة إلى سلة المحذوفات', 'danger', {
-      label: '↩️ تراجع',
+      label: 'تراجع',
       onClick: () => restoreInvoice(id).then(() => toast('تمت استعادة الفاتورة')),
     })
   }
@@ -71,114 +81,143 @@ export default function InvoicesList({ onOpen, initialPayFilter = 'all' }: { onO
     toast('تم تسجيل الدفعة بنجاح')
   }
 
-  if (invoices.length === 0) {
-    return (
-      <div className="card p-4 text-center text-[var(--muted)]">لا توجد فواتير بعد</div>
-    )
-  }
-
   return (
-    <div>
+    <div className="stack">
       {/* Search & filter */}
-      <div className="card mb-3 p-4">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="🔍 ابحث بالاسم أو الصنف..."
-          className="mb-3 w-full rounded-lg border border-[var(--border)] bg-black/20 px-3 py-2"
-        />
-        <div className="flex gap-2">
+      <div className="card card--pad stack-sm">
+        <div className="search">
+          <Icon name="search" size={18} />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="ابحث بالاسم أو الصنف..."
+            className="input"
+            aria-label="بحث في الفواتير"
+            type="search"
+          />
+        </div>
+
+        <div className="segmented" role="group" aria-label="نوع الفاتورة">
           {(['all', 'purchase', 'sale', 'credit'] as Filter[]).map((f) => (
             <button
               key={f}
+              type="button"
+              className="segmented-item"
+              data-active={filter === f}
+              aria-pressed={filter === f}
               onClick={() => setFilter(f)}
-              className={`flex-1 rounded-full border px-3 py-1.5 text-sm ${
-                filter === f
-                  ? 'border-transparent bg-gradient-to-br from-[var(--accent)] to-[var(--accent2)] text-white'
-                  : 'border-[var(--border)] text-[var(--muted)]'
-              }`}
             >
-              {f === 'all' ? 'الكل' : f === 'purchase' ? 'شراء' : f === 'sale' ? 'بيع' : '↩️ مرتجع'}
+              {f === 'all' ? 'الكل' : f === 'purchase' ? 'شراء' : f === 'sale' ? 'بيع' : 'مرتجع'}
             </button>
           ))}
         </div>
-        {/* Payment filter */}
-        <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
+
+        <div className="scroll-x" role="group" aria-label="حالة الدفع">
           {(['all', 'unpaid', 'partial', 'paid', 'overdue'] as PayFilter[]).map((f) => (
             <button
               key={f}
+              type="button"
+              className="chip"
+              data-active={payFilter === f}
+              aria-pressed={payFilter === f}
               onClick={() => setPayFilter(f)}
-              className={`whitespace-nowrap rounded-full border px-3 py-1 text-xs font-bold ${
-                payFilter === f
-                  ? 'border-transparent bg-gradient-to-br from-[var(--brand)] to-[var(--brand2)] text-black'
-                  : 'border-[var(--border)] text-[var(--muted)]'
-              }`}
             >
               {f === 'all' ? 'كل الحالات'
-                : f === 'overdue' ? `⚠️ متأخرة${overdueCount > 0 ? ` (${overdueCount})` : ''}`
-                : `${PAYMENT_META[f].icon} ${PAYMENT_META[f].label}`}
+                : f === 'overdue' ? `متأخرة${overdueCount > 0 ? ` (${overdueCount})` : ''}`
+                : PAYMENT_META[f].label}
             </button>
           ))}
         </div>
-        {/* Date + currency filters */}
-        <div className="mt-2 grid grid-cols-3 gap-2">
-          <div>
-            <label className="mb-1 block text-[11px] text-[var(--muted)]">من تاريخ</label>
-            <input
-              type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full rounded-lg border border-[var(--border)] bg-black/20 px-2 py-1.5 text-xs"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-[11px] text-[var(--muted)]">إلى تاريخ</label>
-            <input
-              type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-              className="w-full rounded-lg border border-[var(--border)] bg-black/20 px-2 py-1.5 text-xs"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-[11px] text-[var(--muted)]">العملة</label>
-            <div className="flex gap-1">
+
+        <button
+          type="button"
+          className="btn btn--ghost btn--sm"
+          style={{ alignSelf: 'flex-start' }}
+          onClick={() => setShowAdvanced((v) => !v)}
+          aria-expanded={showAdvanced}
+        >
+          <Icon name="filter" size={16} />
+          خيارات متقدمة
+          {hasExtraFilters && <span className="badge badge--brand">مُفعّلة</span>}
+          <Icon name="chevronDown" size={15} style={{ transform: showAdvanced ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }} />
+        </button>
+
+        {showAdvanced && (
+          <div className="form-grid">
+            <div>
+              <label className="field-label" htmlFor="flt-from">من تاريخ</label>
+              <DatePicker id="flt-from" value={dateFrom} onChange={setDateFrom} ariaLabel="من تاريخ" />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="flt-to">إلى تاريخ</label>
+              <DatePicker id="flt-to" value={dateTo} onChange={setDateTo} ariaLabel="إلى تاريخ" />
+            </div>
+            <div className="span-2">
+              <label className="field-label">العملة</label>
               <Select
                 value={curFilter}
                 ariaLabel="فلترة العملة"
                 onChange={setCurFilter}
-                options={[{ value: 'all', label: 'الكل 💱' }, ...meta.currencies.map((c) => ({ value: c, label: c }))]}
+                options={[{ value: 'all', label: 'كل العملات' }, ...meta.currencies.map((c) => ({ value: c, label: c }))]}
               />
-              {hasExtraFilters && (
-                <button
-                  onClick={clearExtraFilters}
-                  title="مسح فلترة التاريخ والعملة"
-                  className="shrink-0 rounded-lg border border-[var(--border)] px-2 text-xs text-[var(--muted)] hover:bg-white/10"
-                >
-                  ✕
-                </button>
-              )}
             </div>
+            {hasExtraFilters && (
+              <button type="button" className="btn btn--secondary btn--sm span-2" onClick={clearExtraFilters}>
+                <Icon name="x" size={16} />
+                مسح فلترة التاريخ والعملة
+              </button>
+            )}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* List */}
-      <div className="card p-4">
-        {filtered.length === 0 && (
-          <p className="py-6 text-center text-[var(--muted)]">لا توجد نتائج مطابقة</p>
-        )}
-        {filtered.map((inv) => (
-          <SwipeRow
-            key={inv.id}
-            inv={inv}
-            open={openSwipeId === inv.id}
-            onToggle={(id) => setOpenSwipeId((cur) => (cur === id ? null : id))}
-            onOpen={onOpen}
-            onTrash={(v) => setPendingDelete(v)}
-            onPay={(v) => { setOpenSwipeId(null); setPayTarget(v) }}
-          />
-        ))}
-        {filtered.length > 0 && (
-          <p className="pt-3 text-center text-[11px] text-[var(--muted)]">💡 اسحب أي صف يساراً للدفع السريع أو النقل للسلة</p>
-        )}
-      </div>
+      {invoices.length === 0 ? (
+        <div className="card card--flush">
+          <div className="empty">
+            <span className="empty-icon">
+              <Icon name="receipt" />
+            </span>
+            <div className="empty-title">لا توجد فواتير بعد</div>
+            <div className="empty-text">أنشئ أول فاتورة من الزر المركزي في شريط التنقل.</div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="section-head">
+            <span className="section-title">النتائج</span>
+            <span className="section-meta">{filtered.length}</span>
+          </div>
+          <div className="card card--flush">
+            {filtered.length === 0 ? (
+              <div className="empty">
+                <span className="empty-icon">
+                  <Icon name="search" />
+                </span>
+                <div className="empty-title">لا توجد نتائج مطابقة</div>
+                <div className="empty-text">جرّب تعديل كلمات البحث أو إزالة بعض الفلاتر.</div>
+              </div>
+            ) : (
+              filtered.map((inv) => (
+                <SwipeRow
+                  key={inv.id}
+                  inv={inv}
+                  open={openSwipeId === inv.id}
+                  onToggle={(id) => setOpenSwipeId((cur) => (cur === id ? null : id))}
+                  onOpen={onOpen}
+                  onTrash={(v) => setPendingDelete(v)}
+                  onPay={(v) => { setOpenSwipeId(null); setPayTarget(v) }}
+                />
+              ))
+            )}
+          </div>
+          {filtered.length > 0 && (
+            <p className="hint" style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <Icon name="info" size={14} />
+              اسحب أي صف يساراً للدفع السريع أو النقل للسلة
+            </p>
+          )}
+        </>
+      )}
 
       {/* Quick payment modal */}
       {payTarget && (
@@ -216,29 +255,15 @@ export default function InvoicesList({ onOpen, initialPayFilter = 'all' }: { onO
 
 function PayBadge({ inv }: { inv: Invoice }) {
   if (inv.type === 'credit') {
-    return (
-      <span className="rounded-full bg-violet-500/15 px-2 py-0.5 text-[11px] font-bold text-violet-300">
-        ↩️ مطبَّق على الحساب
-      </span>
-    )
+    return <span className="badge badge--violet">مطبَّق على الحساب</span>
   }
   const st = inv.paymentStatus ?? 'unpaid'
-  if (st === 'paid') {
-    return (
-      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold text-emerald-400">
-        ✅ مدفوعة
-      </span>
-    )
-  }
+  if (st === 'paid') return <span className="badge badge--success">مدفوعة</span>
   const bal = invoiceBalance(inv)
   const late = isOverdue(inv)
   return (
-    <span
-      className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-        late ? 'bg-red-500/20 text-red-300' : st === 'partial' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/10 text-red-400'
-      }`}
-    >
-      {late ? '⚠️ متأخرة · ' : `${PAYMENT_META[st].icon} `}
+    <span className={`badge ${late ? 'badge--danger' : st === 'partial' ? 'badge--warning' : 'badge--danger'}`}>
+      {late ? 'متأخرة · ' : ''}
       {bal.toLocaleString('en-US')} {currencySymbol(inv.currency)}
     </span>
   )
@@ -257,42 +282,63 @@ function SwipeRow({
 }) {
   const start = useRef<{ x: number; y: number } | null>(null)
   const bal = invoiceBalance(inv)
+  const meta = TYPE_META[inv.type]
 
   return (
-    <div className="relative overflow-hidden border-b border-[var(--border)] last:border-b-0">
+    <div className="swipe-row">
       {/* Quick actions overlay — تنزلق من اليسار عند السحب */}
       <div
-        className="absolute inset-y-0 left-0 z-10 flex items-stretch"
+        className="swipe-actions"
         style={{
           transform: open ? 'translateX(0)' : 'translateX(-105%)',
           transition: 'transform .2s ease',
         }}
       >
         <button
+          type="button"
           onClick={(e) => { e.stopPropagation(); onTrash(inv) }}
-          className="flex w-16 flex-col items-center justify-center gap-0.5 text-white"
-          style={{ background: 'linear-gradient(135deg,#991b1b,#dc2626)', fontSize: 18 }}
+          className="btn"
+          style={{
+            width: 66, minHeight: 'auto', borderRadius: 0, flexDirection: 'column', gap: 2,
+            background: 'linear-gradient(135deg,#991b1b,#dc2626)', color: '#fff', fontSize: 11, fontWeight: 800,
+          }}
           title="نقل إلى السلة"
         >
-          🗑️
-          <span style={{ fontSize: 10, fontWeight: 800 }}>سلة</span>
+          <Icon name="trash" size={19} />
+          سلة
         </button>
         {bal > 0.005 && (
           <button
+            type="button"
             onClick={(e) => { e.stopPropagation(); onPay(inv) }}
-            className="flex w-16 flex-col items-center justify-center gap-0.5 text-white"
-            style={{ background: 'linear-gradient(135deg,#065f46,#10b981)', fontSize: 18 }}
+            className="btn"
+            style={{
+              width: 66, minHeight: 'auto', borderRadius: 0, flexDirection: 'column', gap: 2,
+              background: 'linear-gradient(135deg,#065f46,#10b981)', color: '#fff', fontSize: 11, fontWeight: 800,
+            }}
             title="تسجيل دفعة سريعة"
           >
-            💵
-            <span style={{ fontSize: 10, fontWeight: 800 }}>دفعة</span>
+            <Icon name="cash" size={19} />
+            دفعة
           </button>
         )}
       </div>
 
       {/* Row content */}
       <div
+        className="row"
+        role="button"
+        tabIndex={0}
+        aria-label={`فتح فاتورة ${inv.party || ''}`.trim()}
         onClick={() => (open ? onToggle(null) : onOpen(inv.id))}
+        onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            if (open) onToggle(null)
+            else onOpen(inv.id)
+          }
+        }}
         onTouchStart={(e) => {
           const t = e.touches[0]
           start.current = { x: t.clientX, y: t.clientY }
@@ -307,50 +353,33 @@ function SwipeRow({
           if (dx < -48) onToggle(inv.id)
           else if (dx > 48 || open) onToggle(null)
         }}
-        className="pressable flex cursor-pointer items-center justify-between py-3"
+        style={{ cursor: 'pointer', background: 'var(--card)' }}
       >
-        <div>
-          <div className="font-semibold">{inv.party}</div>
-          <div className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-[var(--muted)]">
-            {new Date(inv.date).toLocaleDateString('en-US')} ·{' '}
-            <span
-              className={`rounded-full px-2 py-0.5 text-[11px] ${
-                inv.type === 'purchase'
-                  ? 'bg-amber-500/20 text-amber-400'
-                  : inv.type === 'credit'
-                    ? 'bg-violet-500/20 text-violet-300'
-                    : 'bg-emerald-500/20 text-emerald-400'
-              }`}
-            >
-              {inv.type === 'purchase' ? 'شراء' : inv.type === 'credit' ? '↩️ مرتجع' : 'بيع'}
-            </span>
+        <span className={`stat-icon ${meta.tone}`}>
+          <Icon name={meta.icon} />
+        </span>
+        <span className="row-main">
+          <span className="row-title truncate" style={{ display: 'block' }}>{inv.party || '-'}</span>
+          <span className="row-sub inline-sm" style={{ display: 'flex', marginTop: 3, gap: 6 }}>
+            <span>{formatDate(inv.date)}</span>
+            <span className="badge badge--neutral">{meta.label}</span>
             <PayBadge inv={inv} />
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className={`font-extrabold ${inv.type === 'credit' ? 'text-violet-300' : 'accent-text'}`}>
+          </span>
+        </span>
+        <span className="row-end inline" style={{ gap: 8 }}>
+          <span className="amount" style={{ color: inv.type === 'credit' ? 'var(--violet)' : 'var(--text)' }}>
             {inv.type === 'credit' ? '− ' : ''}{inv.total.toLocaleString('en-US')} {currencySymbol(inv.currency)}
-          </div>
+          </span>
           <button
+            type="button"
             onClick={(e) => { e.stopPropagation(); onTrash(inv) }}
-            style={{
-              width: 32, height: 32,
-              borderRadius: 9,
-              border: '1px solid rgba(255,90,95,.3)',
-              background: 'rgba(255,90,95,.1)',
-              color: 'var(--danger)',
-              fontSize: 13,
-              cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'background .15s',
-              flexShrink: 0,
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,90,95,.22)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,90,95,.1)')}
+            className="btn btn--tint-danger btn--icon"
+            style={{ width: 38, minHeight: 38, borderRadius: 10 }}
+            aria-label="نقل إلى السلة"
           >
-            🗑️
+            <Icon name="trash" size={17} />
           </button>
-        </div>
+        </span>
       </div>
     </div>
   )

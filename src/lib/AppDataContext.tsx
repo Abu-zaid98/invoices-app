@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Invoice, Meta } from './types'
 import { DEFAULT_META, normalizeInvoice, newPaymentId } from './types'
 import {
@@ -6,28 +6,9 @@ import {
   getTrash, moveToTrash, restoreFromTrash, deleteTrashForever, emptyTrashDB, purgeExpiredTrash,
   type TrashRecord,
 } from './db'
+import { AppDataContext, type AppDataContextValue } from './contexts/appData'
 
-interface AppDataContextValue {
-  loaded: boolean
-  meta: Meta
-  invoices: Invoice[]
-  trash: TrashRecord[]
-  updateMeta: <K extends keyof Meta>(key: K, value: Meta[K]) => Promise<void>
-  saveInvoice: (invoice: Invoice) => Promise<void>
-  removeInvoice: (id: number) => Promise<void>
-  /** نقل فاتورة إلى سلة المحذوفات (استعادة خلال 30 يوم) */
-  trashInvoice: (id: number) => Promise<void>
-  restoreInvoice: (id: number) => Promise<void>
-  deleteForever: (id: number) => Promise<void>
-  emptyTrash: () => Promise<void>
-  /** إضافة دفعة لفاتورة (يُحدّث paidAmount والحالة تلقائياً) */
-  recordPayment: (id: number, amount: number, note?: string) => Promise<void>
-  /** التراجع عن دفعة مسجلة (إعادة حساب المجموع والحالة) */
-  voidPayment: (id: number, entryId: string) => Promise<void>
-  importAll: (data: { meta: Meta; invoices: Invoice[] }) => Promise<void>
-}
-
-const AppDataContext = createContext<AppDataContextValue | null>(null)
+export type { AppDataContextValue }
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const [loaded, setLoaded] = useState(false)

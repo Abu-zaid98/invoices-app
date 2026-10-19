@@ -3,8 +3,11 @@ import { useAppData } from '../lib/AppDataContext'
 import { convert, currencySymbol } from '../lib/types'
 import { buildParties, partyBalance } from '../lib/directory'
 import { exportOperationsPDF, filterOperations } from '../lib/printReport'
+import { formatDate } from '../lib/format'
 import { useToast } from '../lib/useToast'
+import DatePicker from '../components/DatePicker'
 import Select from '../components/Select'
+import Icon from '../components/ui/Icon'
 
 export default function Reports({ onOpenParty }: { onOpenParty?: (name: string) => void }) {
   const { meta, invoices } = useAppData()
@@ -95,123 +98,167 @@ export default function Reports({ onOpenParty }: { onOpenParty?: (name: string) 
 
   function Table({ data, empty }: { data: Record<string, { qty: number; total: number }>; empty: string }) {
     const rows = Object.entries(data).sort((a, b) => b[1].qty - a[1].qty)
-    if (rows.length === 0) return <p className="text-[var(--muted)]">{empty}</p>
+    if (rows.length === 0) return <p className="hint">{empty}</p>
     return (
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="text-[var(--muted)]">
-            <th className="border-b border-[var(--border)] py-1.5 text-right">الصنف</th>
-            <th className="border-b border-[var(--border)] py-1.5 text-right">الكمية</th>
-            <th className="border-b border-[var(--border)] py-1.5 text-right">الإجمالي ({reportCurrency})</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(([name, v]) => (
-            <tr key={name}>
-              <td className="border-b border-[var(--border)] py-1.5">{name}</td>
-              <td className="border-b border-[var(--border)] py-1.5">{v.qty}</td>
-              <td className="border-b border-[var(--border)] py-1.5">{v.total.toLocaleString('en-US')}</td>
+      <div className="table-scroll table-scroll--narrow">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>الصنف</th>
+              <th style={{ textAlign: 'center' }}>الكمية</th>
+              <th style={{ textAlign: 'left' }}>الإجمالي ({reportCurrency})</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map(([name, v]) => (
+              <tr key={name}>
+                <td>{name}</td>
+                <td style={{ textAlign: 'center', color: 'var(--muted)' }}>{v.qty}</td>
+                <td className="amount" style={{ textAlign: 'left' }}>{v.total.toLocaleString('en-US')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      <div className="card p-4">
-        <label className="mb-1 block text-xs text-[var(--muted)]">عرض التقارير بعملة</label>
+    <div className="stack-lg">
+      {/* عملة العرض */}
+      <div className="card card--pad">
+        <label className="field-label" style={{ marginBottom: 6 }}>عرض التقارير بعملة</label>
         <Select
           value={reportCurrency}
           ariaLabel="عملة التقارير"
           onChange={setReportCurrency}
           options={meta.currencies.map((c) => ({ value: c, label: `${c} ${currencySymbol(c)}` }))}
         />
-        {mixedCur && <p className="mt-2 text-xs text-[var(--muted)]">💱 تُحوَّل المبالغ حسب أسعار الصرف المضبوطة في الإعدادات</p>}
+        {mixedCur && (
+          <p className="hint inline-sm" style={{ marginTop: 8, display: 'flex' }}>
+            <Icon name="refresh" size={14} />
+            تُحوَّل المبالغ حسب أسعار الصرف المضبوطة في الإعدادات
+          </p>
+        )}
       </div>
 
-      <div className="card p-4">
-        <h3 className="mb-2 font-bold">📈 صافي الربح الشهري ({reportCurrency})</h3>
+      {/* صافي الربح الشهري */}
+      <div className="card card--pad">
+        <div className="section-head">
+          <span className="section-title">صافي الربح الشهري ({reportCurrency})</span>
+          <span className="stat-icon g-blue" style={{ width: 34, height: 34 }}>
+            <Icon name="trendingUp" size={18} />
+          </span>
+        </div>
         <MonthlyChart currency={reportCurrency} />
       </div>
 
-      {/* Export operations PDF */}
-      <div className="card p-4">
-        <h3 className="mb-1 font-bold">📄 تصدير كشف عمليات PDF</h3>
-        <p className="mb-3 text-xs text-[var(--muted)]">
+      {/* تصدير كشف عمليات PDF */}
+      <div className="card card--pad">
+        <div className="section-head">
+          <span className="section-title">تصدير كشف عمليات PDF</span>
+          <span className="stat-icon g-violet" style={{ width: 34, height: 34 }}>
+            <Icon name="file" size={18} />
+          </span>
+        </div>
+        <p className="hint" style={{ marginBottom: 12 }}>
           جدول بسيط للفترة المحددة — كل العمليات أو عميل/مورد معين — بعملة العرض المختارة أعلاه.
         </p>
-        <div className="mb-2 grid grid-cols-2 gap-2">
+        <div className="form-grid" style={{ marginBottom: 12 }}>
           <div>
-            <label className="mb-1 block text-xs text-[var(--muted)]">من تاريخ</label>
-            <input
-              type="date" value={pdfFrom} onChange={(e) => setPdfFrom(e.target.value)}
-              className="w-full rounded-lg border border-[var(--border)] bg-black/20 px-3 py-2 text-sm"
-            />
+            <label className="field-label" htmlFor="pdf-from">من تاريخ</label>
+            <DatePicker id="pdf-from" value={pdfFrom} onChange={setPdfFrom} ariaLabel="من تاريخ" />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-[var(--muted)]">إلى تاريخ</label>
-            <input
-              type="date" value={pdfTo} onChange={(e) => setPdfTo(e.target.value)}
-              className="w-full rounded-lg border border-[var(--border)] bg-black/20 px-3 py-2 text-sm"
-            />
+            <label className="field-label" htmlFor="pdf-to">إلى تاريخ</label>
+            <DatePicker id="pdf-to" value={pdfTo} onChange={setPdfTo} ariaLabel="إلى تاريخ" />
           </div>
         </div>
-        <label className="mb-1 block text-xs text-[var(--muted)]">الطرف</label>
-        <div className="mb-3">
+        <label className="field-label" style={{ marginBottom: 6 }}>الطرف</label>
+        <div style={{ marginBottom: 12 }}>
           <Select
             value={pdfParty}
             ariaLabel="طرف الكشف"
             onChange={setPdfParty}
-            options={[{ value: '', label: 'كل العملاء والموردين 📋' }, ...partyOptions.map((n) => ({ value: n, label: `👤 ${n}` }))]}
+            options={[{ value: '', label: 'كل العملاء والموردين' }, ...partyOptions.map((n) => ({ value: n, label: n }))]}
           />
         </div>
         <button
+          type="button"
           onClick={handleExportPdf}
           disabled={pdfBusy || invoices.length === 0}
-          className="btn-brand w-full rounded-xl py-2.5 text-sm font-bold disabled:opacity-50"
+          className="btn btn--primary btn--block"
         >
-          {pdfBusy ? '⏳ جارٍ التجهيز...' : `⬇️ تصدير الكشف (${pdfPreviewCount} عملية)`}
+          <Icon name="download" />
+          {pdfBusy ? 'جارٍ التجهيز...' : `تصدير الكشف (${pdfPreviewCount} عملية)`}
         </button>
       </div>
 
-      <div className="card p-4">
-        <h3 className="mb-2 font-bold">الأكثر توريدًا (شراء)</h3>
+      {/* الأكثر توريدًا (شراء) */}
+      <div className="card card--pad">
+        <div className="section-head">
+          <span className="section-title">الأكثر توريدًا (شراء)</span>
+          <span className="stat-icon g-amber" style={{ width: 34, height: 34 }}>
+            <Icon name="download" size={18} />
+          </span>
+        </div>
         <Table data={agg.purchase} empty="لا توجد بيانات شراء" />
       </div>
 
       {/* الديون */}
-      <div className="card p-4">
-        <h3 className="mb-2 font-bold">💰 الديون المستحقة ({reportCurrency})</h3>
-        <DebtTable title="مستحق لك من العملاء 🟢" rows={debts.customers} empty="لا توجد ديون على العملاء" />
-        <div className="mt-3" />
-        <DebtTable title="مستحق عليك للموردين 🔴" rows={debts.suppliers} empty="لا توجد ديون للموردين" />
+      <div className="card card--pad">
+        <div className="section-head">
+          <span className="section-title">الديون المستحقة ({reportCurrency})</span>
+          <span className="stat-icon g-red" style={{ width: 34, height: 34 }}>
+            <Icon name="wallet" size={18} />
+          </span>
+        </div>
+        <DebtTable title="مستحق لك من العملاء" tone="success" rows={debts.customers} empty="لا توجد ديون على العملاء" />
+        <div style={{ height: 14 }} />
+        <DebtTable title="مستحق عليك للموردين" tone="danger" rows={debts.suppliers} empty="لا توجد ديون للموردين" />
         {debts.mixed.length > 0 && (
-          <div className="mt-3">
-            <DebtTable title="تعامل مزدوج (بيع وشراء)" rows={debts.mixed} empty="" />
-          </div>
+          <>
+            <div style={{ height: 14 }} />
+            <DebtTable title="تعامل مزدوج (بيع وشراء)" tone="brand" rows={debts.mixed} empty="" />
+          </>
         )}
       </div>
 
       {/* دليل الأطراف والأصناف */}
-      <div className="card p-4">
-        <h3 className="mb-2 font-bold">👥 دليل العملاء والموردين</h3>
+      <div className="card card--pad">
+        <div className="section-head">
+          <span className="section-title">دليل العملاء والموردين</span>
+          <span className="stat-icon g-blue" style={{ width: 34, height: 34 }}>
+            <Icon name="users" size={18} />
+          </span>
+        </div>
         <DirectoryTable onOpenParty={onOpenParty} />
       </div>
 
-      <div className="card p-4">
-        <h3 className="mb-2 font-bold">الأكثر بيعًا</h3>
+      {/* الأكثر بيعًا */}
+      <div className="card card--pad">
+        <div className="section-head">
+          <span className="section-title">الأكثر بيعًا</span>
+          <span className="stat-icon g-green" style={{ width: 34, height: 34 }}>
+            <Icon name="upload" size={18} />
+          </span>
+        </div>
         <Table data={agg.sale} empty="لا توجد بيانات بيع" />
       </div>
 
-      <div className="card p-4">
-        <h3 className="mb-2 font-bold">تتبع سعر البيع عبر الزمن ({reportCurrency})</h3>
+      {/* تتبع سعر البيع */}
+      <div className="card card--pad">
+        <div className="section-head">
+          <span className="section-title">تتبع سعر البيع عبر الزمن ({reportCurrency})</span>
+          <span className="stat-icon g-violet" style={{ width: 34, height: 34 }}>
+            <Icon name="chart" size={18} />
+          </span>
+        </div>
         {saleItemNames.length === 0 ? (
-          <p className="text-[var(--muted)]">لا توجد فواتير بيع بعد</p>
+          <p className="hint">لا توجد فواتير بيع بعد</p>
         ) : (
           <>
-            <div className="mb-3">
+            <div style={{ marginBottom: 12 }}>
               <Select
                 value={activeItem ?? ''}
                 ariaLabel="الصنف"
@@ -220,7 +267,7 @@ export default function Reports({ onOpenParty }: { onOpenParty?: (name: string) 
               />
             </div>
             {trendPoints.length === 0 ? (
-              <p className="text-[var(--muted)]">لا توجد بيانات لهذا الصنف بعد</p>
+              <p className="hint">لا توجد بيانات لهذا الصنف بعد</p>
             ) : (
               <PriceChart points={trendPoints} />
             )}
@@ -232,37 +279,40 @@ export default function Reports({ onOpenParty }: { onOpenParty?: (name: string) 
 }
 
 function DebtTable({
-  title, rows, empty,
+  title, rows, empty, tone,
 }: {
   title: string
   rows: { p: { name: string; invoiceCount: number }; bal: number }[]
   empty: string
+  tone: 'success' | 'danger' | 'brand'
 }) {
   const total = rows.reduce((s, r) => s + r.bal, 0)
+  const color = tone === 'success' ? 'var(--success)' : tone === 'danger' ? 'var(--danger)' : 'var(--brand)'
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between text-sm">
-        <span className="font-bold">{title}</span>
-        <span className="font-black text-[var(--brand)]">{total.toLocaleString('en-US')}</span>
+      <div className="row-between" style={{ marginBottom: 6 }}>
+        <span className="inline" style={{ fontWeight: 700, fontSize: 13.5 }}>
+          <span style={{ width: 8, height: 8, borderRadius: 99, background: color, display: 'inline-block' }} />
+          {title}
+        </span>
+        <span className="amount" style={{ color }}>{total.toLocaleString('en-US')}</span>
       </div>
       {rows.length === 0 ? (
-        <p className="text-xs text-[var(--muted)]">{empty}</p>
+        <p className="hint">{empty}</p>
       ) : (
-        <table className="w-full border-collapse text-sm">
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.p.name}>
-                <td className="border-b border-[var(--border)] py-1.5">👤 {r.p.name}</td>
-                <td className="border-b border-[var(--border)] py-1.5 text-center text-xs text-[var(--muted)]">
-                  {r.p.invoiceCount} فواتير
-                </td>
-                <td className="border-b border-[var(--border)] py-1.5 text-left font-bold">
-                  {r.bal.toLocaleString('en-US')}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="table-scroll table-scroll--narrow">
+          <table className="table">
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.p.name}>
+                  <td>{r.p.name}</td>
+                  <td style={{ textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>{r.p.invoiceCount} فواتير</td>
+                  <td className="amount" style={{ textAlign: 'left' }}>{r.bal.toLocaleString('en-US')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )
@@ -283,50 +333,51 @@ function DirectoryTable({ onOpenParty }: { onOpenParty?: (name: string) => void 
     }))
   }, [invoices, q, meta.currency, meta.rates])
 
-  if (invoices.length === 0) return <p className="text-[var(--muted)]">لا توجد بيانات بعد</p>
+  if (invoices.length === 0) return <p className="hint">لا توجد بيانات بعد</p>
   return (
     <div>
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="🔍 ابحث عن عميل أو مورد..."
-        className="mb-2 w-full rounded-lg border border-[var(--border)] bg-black/20 px-3 py-2 text-sm"
-      />
+      <div className="search" style={{ marginBottom: 10 }}>
+        <Icon name="search" size={18} />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="ابحث عن عميل أو مورد..."
+          className="input"
+          aria-label="بحث في دليل الأطراف"
+          type="search"
+        />
+      </div>
       {parties.length === 0 ? (
-        <p className="text-[var(--muted)]">لا توجد نتائج</p>
+        <p className="hint">لا توجد نتائج</p>
       ) : (
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="text-[var(--muted)]">
-              <th className="border-b border-[var(--border)] py-1.5 text-right">الاسم</th>
-              <th className="border-b border-[var(--border)] py-1.5 text-right">النوع</th>
-              <th className="border-b border-[var(--border)] py-1.5 text-right">الفواتير</th>
-              <th className="border-b border-[var(--border)] py-1.5 text-right">إجمالي التعامل ({meta.currency})</th>
-            </tr>
-          </thead>
-          <tbody>
-            {parties.map(({ p, volume }) => (
-              <tr
-                key={p.name}
-                onClick={() => onOpenParty?.(p.name)}
-                className={onOpenParty ? 'cursor-pointer hover:bg-white/5' : undefined}
-                title={onOpenParty ? 'عرض كشف الحساب' : undefined}
-              >
-                <td className="border-b border-[var(--border)] py-1.5 font-semibold">
-                  {p.name} {onOpenParty && <span className="text-[var(--brand)]">📊</span>}
-                </td>
-                <td className="border-b border-[var(--border)] py-1.5 text-xs text-[var(--muted)]">
+        <div className="list list-tappable">
+          {parties.map(({ p, volume }) => (
+            <button
+              key={p.name}
+              type="button"
+              className="row row--flush"
+              onClick={() => onOpenParty?.(p.name)}
+              disabled={!onOpenParty}
+            >
+              <span className="avatar" style={{ width: 38, height: 38, fontSize: 14 }}>
+                {p.name.charAt(0)}
+              </span>
+              <span className="row-main">
+                <span className="row-title truncate" style={{ display: 'block' }}>{p.name}</span>
+                <span className="row-sub" style={{ display: 'block' }}>
                   {p.kinds.has('sale') && p.kinds.has('purchase')
                     ? 'عميل + مورد'
                     : p.kinds.has('sale') ? 'عميل'
-                    : p.kinds.has('purchase') ? 'مورد' : '🧾 إشعارات فقط'}
-                </td>
-                <td className="border-b border-[var(--border)] py-1.5">{p.invoiceCount}</td>
-                <td className="border-b border-[var(--border)] py-1.5 font-bold">{volume.toLocaleString('en-US')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    : p.kinds.has('purchase') ? 'مورد' : 'إشعارات فقط'}
+                  {' · '}{p.invoiceCount} فواتير
+                </span>
+              </span>
+              <span className="row-end amount" style={{ color: 'var(--brand)' }}>
+                {volume.toLocaleString('en-US')}
+              </span>
+            </button>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -366,10 +417,10 @@ function MonthlyChart({ currency }: { currency: string }) {
   const gw = (W - 20) / months.length
   const bw = Math.min(18, (gw - 14) / 2)
 
-  if (invoices.length === 0) return <p className="text-[var(--muted)]">لا توجد فواتير بعد</p>
+  if (invoices.length === 0) return <p className="hint">لا توجد فواتير بعد</p>
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-xl bg-black/10" style={{ direction: 'ltr' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ direction: 'ltr', background: 'var(--chip)', borderRadius: 'var(--radius-md)' }}>
         <line x1={10} y1={base} x2={W - 10} y2={base} strokeWidth={1} style={{ stroke: 'var(--chart-grid)' }} />
         {months.map((x, i) => {
           const cx = 10 + gw * i + gw / 2
@@ -391,9 +442,15 @@ function MonthlyChart({ currency }: { currency: string }) {
           )
         })}
       </svg>
-      <div className="mt-2 flex justify-center gap-4 text-xs text-[var(--muted)]">
-        <span><span className="inline-block h-2 w-2 rounded-full bg-emerald-400" /> مبيعات</span>
-        <span><span className="inline-block h-2 w-2 rounded-full bg-amber-400" /> مشتريات</span>
+      <div className="inline" style={{ justifyContent: 'center', gap: 16, marginTop: 10, fontSize: 12, color: 'var(--muted)' }}>
+        <span className="inline-sm">
+          <span style={{ width: 8, height: 8, borderRadius: 99, background: '#22c9a3', display: 'inline-block' }} />
+          مبيعات
+        </span>
+        <span className="inline-sm">
+          <span style={{ width: 8, height: 8, borderRadius: 99, background: '#f59e0b', display: 'inline-block' }} />
+          مشتريات
+        </span>
       </div>
     </div>
   )
@@ -415,13 +472,13 @@ function PriceChart({ points }: { points: { date: number; price: number }[] }) {
   const path = coords.map((c, i) => `${i === 0 ? 'M' : 'L'}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ')
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-xl bg-black/10">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ background: 'var(--chip)', borderRadius: 'var(--radius-md)' }}>
       <line x1={P} y1={H - P} x2={W - P} y2={H - P} strokeWidth={1} style={{ stroke: 'var(--chart-grid)' }} />
       <path d={path} fill="none" strokeWidth={2.5} strokeLinecap="round" style={{ stroke: 'var(--brand)' }} />
       {coords.map((c, i) => (
         <circle key={i} cx={c.x} cy={c.y} r={3.5} style={{ fill: 'var(--brand)' }}>
           <title>
-            {points[i].price.toLocaleString('en-US')} — {new Date(points[i].date).toLocaleDateString('en-US')}
+            {points[i].price.toLocaleString('en-US')} — {formatDate(points[i].date)}
           </title>
         </circle>
       ))}

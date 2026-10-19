@@ -3,12 +3,15 @@ import { useAppData } from '../lib/AppDataContext'
 import { useToast } from '../lib/useToast'
 import { currencySymbol, invoiceBalance, isOverdue, PAYMENT_META, PAYMENT_METHOD_META, calcTotals } from '../lib/types'
 import { exportReceiptPDF } from '../lib/printInvoice'
+import { formatDate } from '../lib/format'
 import { shareInvoicePdf } from '../lib/invoicePdf'
 import { getInvoiceQR } from '../lib/qr'
 import ExportModal from '../components/ExportModal'
 import DeleteConfirmModal from '../components/DeleteConfirmModal'
 import PaymentModal from '../components/PaymentModal'
 import CreditModal from '../components/CreditModal'
+import Modal from '../components/ui/Modal'
+import Icon from '../components/ui/Icon'
 
 interface Props {
   invoiceId: number
@@ -47,7 +50,27 @@ export default function InvoiceDetail({ invoiceId, onBack, onEdit, onDuplicate, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inv?.id, inv?.total, inv?.currency, inv?.paymentStatus, inv?.paidAmount])
 
-  if (!inv) return <div className="card p-4 text-center text-[var(--muted)]">الفاتورة غير موجودة</div>
+  if (!inv) {
+    return (
+      <div className="stack">
+        <div className="page-head">
+          <button type="button" className="icon-btn icon-btn--ghost" onClick={onBack} aria-label="رجوع">
+            <Icon name="arrowRight" />
+          </button>
+          <span className="t-heading">الفاتورة</span>
+          <span style={{ width: 40 }} aria-hidden="true" />
+        </div>
+        <div className="card card--flush">
+          <div className="empty">
+            <span className="empty-icon">
+              <Icon name="alert" />
+            </span>
+            <div className="empty-title">الفاتورة غير موجودة</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const isSale = inv.type === 'sale'
   const credit = inv.type === 'credit'
@@ -59,12 +82,15 @@ export default function InvoiceDetail({ invoiceId, onBack, onEdit, onDuplicate, 
   const payPct = inv.total > 0 ? Math.min(100, ((inv.paidAmount || 0) / inv.total) * 100) : 0
   const bt = calcTotals(inv.items, inv.discountType ?? null, inv.discountValue || 0, inv.taxPercent || 0)
 
+  const typeIcon = credit ? 'refresh' : isSale ? 'upload' : 'download'
+  const typeLabel = credit ? (creditSale ? 'إشعار دائن' : 'مرتجع مشتريات') : isSale ? 'بيع' : 'شراء'
+
   async function confirmDelete() {
     const id = inv!.id
     await trashInvoice(id)
     setShowDeleteModal(false)
     toast('نُقلت الفاتورة إلى سلة المحذوفات', 'danger', {
-      label: '↩️ تراجع',
+      label: 'تراجع',
       onClick: () => restoreInvoice(id).then(() => toast('تمت استعادة الفاتورة')),
     })
     onBack()
@@ -98,7 +124,7 @@ export default function InvoiceDetail({ invoiceId, onBack, onEdit, onDuplicate, 
     if (pendingVoidId == null) return
     await voidPayment(inv!.id, pendingVoidId)
     setPendingVoidId(null)
-    toast('تم التراجع عن الدفعة', 'danger')
+    toast('تم التراجع عن الدفعة')
   }
 
   const pendingVoidEntry = pendingVoidId != null ? (inv.payments || []).find((p) => p.id === pendingVoidId) : null
@@ -129,197 +155,186 @@ export default function InvoiceDetail({ invoiceId, onBack, onEdit, onDuplicate, 
   }
 
   return (
-    <div>
-      {/* Action bar */}
-      <div className="card mb-3 flex flex-wrap items-center justify-between gap-2 p-4 print:hidden">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={onBack}
-            className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-semibold hover:bg-white/5 transition-colors"
-          >
-            ← رجوع
-          </button>
-          {!credit && (
-            <>
-              <button
-                onClick={() => onEdit(inv.id)}
-                className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-semibold hover:bg-white/5 transition-colors"
-              >
-                ✏️ تعديل
-              </button>
-              <button
-                onClick={() => onDuplicate(inv.id)}
-                className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-semibold hover:bg-white/5 transition-colors"
-                title="إنشاء نسخة جديدة من هذه الفاتورة برقم جديد"
-              >
-                📋 تكرار
-              </button>
-              {onCreateCredit && (
-                <button
-                  onClick={() => setShowCreditModal(true)}
-                  className="rounded-xl border border-violet-500/40 bg-violet-500/10 px-4 py-2 text-sm font-bold text-violet-300 hover:bg-violet-500/20 transition-colors"
-                  title="إنشاء إشعار دائن/مرتجع مرتبط بهذه الفاتورة"
-                >
-                  ↩️ مرتجع
-                </button>
-              )}
-            </>
-          )}
-
-          {/* Premium Export Button */}
-          <button
-            onClick={() => setShowExport(true)}
-            className="btn-brand rounded-xl px-5 py-2 text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity"
-            style={{
-              boxShadow: 'var(--shadow-brand)',
-            }}
-          >
-            <span>⬇️</span>
-            تصدير PDF / PNG
-          </button>
-          <button
-            onClick={handleShare}
-            disabled={sharing}
-            className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-semibold hover:bg-white/5 transition-colors disabled:opacity-60"
-            title="مشاركة الفاتورة"
-          >
-            {sharing ? '⏳ جارٍ...' : '📤 مشاركة'}
-          </button>
+    <div className="stack">
+      {/* Top bar */}
+      <div className="page-head print:hidden">
+        <button type="button" className="icon-btn icon-btn--ghost" onClick={onBack} aria-label="رجوع">
+          <Icon name="arrowRight" />
+        </button>
+        <div className="grow" style={{ textAlign: 'center' }}>
+          <div className="t-heading">فاتورة #{invNum}</div>
+          <div className="t-caption">{typeLabel}</div>
         </div>
-
-        {/* Delete button */}
         <button
+          type="button"
+          className="icon-btn"
           onClick={() => setShowDeleteModal(true)}
-          className="rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2 text-sm font-bold text-[var(--danger)] hover:bg-red-500/20 transition-colors"
-          title="حذف هذه الفاتورة"
+          aria-label="حذف الفاتورة"
+          style={{ color: 'var(--danger)' }}
         >
-          🗑️ حذف
+          <Icon name="trash" />
+        </button>
+      </div>
+
+      {/* Action bar — يلتف بدل أن يُخفي أي زر على الشاشات الصغيرة */}
+      <div className="action-bar print:hidden">
+        {!credit && (
+          <>
+            <button type="button" className="btn btn--secondary btn--sm" onClick={() => onEdit(inv.id)}>
+              <Icon name="pencil" size={16} />
+              تعديل
+            </button>
+            <button type="button" className="btn btn--secondary btn--sm" onClick={() => onDuplicate(inv.id)} title="إنشاء نسخة جديدة برقم جديد">
+              <Icon name="copy" size={16} />
+              تكرار
+            </button>
+            {onCreateCredit && (
+              <button
+                type="button"
+                className="btn btn--tint-violet btn--sm"
+                onClick={() => setShowCreditModal(true)}
+                title="إنشاء إشعار دائن/مرتجع مرتبط بهذه الفاتورة"
+              >
+                <Icon name="refresh" size={16} />
+                مرتجع
+              </button>
+            )}
+          </>
+        )}
+        <button type="button" className="btn btn--primary btn--sm" onClick={() => setShowExport(true)} title="تصدير PDF / PNG">
+          <Icon name="download" size={16} />
+          تصدير
+        </button>
+        <button type="button" className="btn btn--secondary btn--sm" onClick={handleShare} disabled={sharing} title="مشاركة الفاتورة">
+          <Icon name="share" size={16} />
+          {sharing ? 'جارٍ...' : 'مشاركة'}
         </button>
       </div>
 
       {/* Invoice preview card */}
-      <div id="invoice-print-area" className="card relative overflow-hidden p-5">
-        {/* Single soft top wash */}
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-40"
-          style={{
-            background: `linear-gradient(180deg, ${isSale ? 'rgba(34,201,163,.08)' : 'rgba(255,176,32,.08)'}, transparent)`,
-          }}
-        />
-
+      <div id="invoice-print-area" className="card card--pad">
         {/* Header row */}
-        <div className="relative z-10 flex flex-wrap items-start justify-between gap-2">
-          <div className="flex items-center gap-2.5">
+        <div className="row-between" style={{ alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div className="inline" style={{ alignItems: 'flex-start' }}>
             {meta.company.logo && (
-              <img src={meta.company.logo} className="max-h-12 max-w-24 rounded-lg bg-white p-1" alt="الشعار" />
+              <img src={meta.company.logo} alt="الشعار" style={{ maxHeight: 48, maxWidth: 96, borderRadius: 10, background: '#fff', padding: 4 }} />
             )}
             <div>
-              <h2 className="mb-0.5 text-lg font-black brand-text">🧾 {meta.company.name || 'اسم الشركة'}</h2>
-              <p className="text-sm text-[var(--muted)]">
-                فاتورة رقم <span className="font-bold text-[var(--text)]">#{invNum}</span>
+              <h2 className="brand-text" style={{ margin: 0, fontSize: 18, fontWeight: 850 }}>
+                {meta.company.name || 'اسم الشركة'}
+              </h2>
+              <p className="t-sub" style={{ marginTop: 2 }}>
+                فاتورة رقم <b style={{ color: 'var(--text)' }}>#{invNum}</b>
                 {' — '}
-                {new Date(inv.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                {formatDate(inv.date)}
               </p>
             </div>
           </div>
           <span
-            className={`rounded-full px-4 py-1.5 text-sm font-bold ${
-              credit
-                ? 'bg-violet-500/20 text-violet-300'
-                : isSale ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
-            }`}
+            className={`badge ${credit ? 'badge--violet' : isSale ? 'badge--success' : 'badge--warning'}`}
+            style={{ padding: '6px 14px', fontSize: 12.5 }}
           >
-            {credit ? (creditSale ? '↩️ إشعار دائن' : '↩️ مرتجع مشتريات') : isSale ? '📦 بيع' : '🛒 شراء'}
+            <Icon name={typeIcon} size={15} />
+            {typeLabel}
           </span>
         </div>
 
         {/* Linked invoice (for credits) */}
         {credit && inv.linkedId != null && onOpenInvoice && (
           <button
+            type="button"
             onClick={() => onOpenInvoice(inv.linkedId!)}
-            className="relative z-10 mt-3 flex w-full items-center justify-between rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-2.5 text-sm hover:bg-violet-500/15 transition-colors"
+            className="row-between btn btn--secondary"
+            style={{ width: '100%', marginTop: 14, minHeight: 46, borderRadius: 'var(--radius-md)' }}
           >
-            <span className="font-bold text-violet-200">
-              ↩️ مرتبط بالفاتورة #{String(inv.linkedId).padStart(4, '0')}
+            <span className="inline-sm" style={{ fontWeight: 700, color: 'var(--violet)' }}>
+              <Icon name="refresh" size={16} />
+              مرتبط بالفاتورة #{String(inv.linkedId).padStart(4, '0')}
             </span>
-            <span className="text-xs text-violet-300/70">عرض الأصل ←</span>
+            <Icon name="chevronLeft" size={16} style={{ color: 'var(--muted)' }} />
           </button>
         )}
 
         {/* Party */}
-        <p className="relative z-10 mt-3 text-sm">
-          <span className="text-[var(--muted)]">{isSale ? 'العميل' : 'المورد'}:</span>{' '}
+        <p style={{ marginTop: 14, fontSize: 14 }}>
+          <span style={{ color: 'var(--muted)' }}>{isSale ? 'العميل' : 'المورد'}:</span>{' '}
           {onOpenParty ? (
-            <button onClick={() => onOpenParty(inv.party)} className="font-bold text-[var(--brand)] underline decoration-dotted underline-offset-4 hover:opacity-80" title="عرض كشف الحساب">
-              {inv.party} 📊
+            <button
+              type="button"
+              onClick={() => onOpenParty(inv.party)}
+              style={{ border: 0, background: 'none', padding: 0, color: 'var(--brand)', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'underline dotted', textUnderlineOffset: 4 }}
+              title="عرض كشف الحساب"
+            >
+              {inv.party}
             </button>
           ) : (
-            <span className="font-bold">{inv.party}</span>
+            <span style={{ fontWeight: 700 }}>{inv.party}</span>
           )}
         </p>
 
         {/* Items table */}
-        <table className="relative z-10 mt-4 w-full border-collapse text-sm">
-          <thead>
-            <tr className="text-[var(--muted)]">
-              <th className="border-b border-[var(--border)] pb-2 pt-1 text-right">#</th>
-              <th className="border-b border-[var(--border)] pb-2 pt-1 text-right">الصنف</th>
-              <th className="border-b border-[var(--border)] pb-2 pt-1 text-right">الكمية</th>
-              <th className="border-b border-[var(--border)] pb-2 pt-1 text-right">سعر الوحدة</th>
-              <th className="border-b border-[var(--border)] pb-2 pt-1 text-right">الإجمالي</th>
-            </tr>
-          </thead>
-          <tbody>
-            {inv.items.map((it, idx) => (
-              <tr key={idx}>
-                <td className="border-b border-[var(--border)] py-2">
-                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-[10px] font-bold text-amber-400">
-                    {idx + 1}
-                  </span>
-                </td>
-                <td className="border-b border-[var(--border)] py-2">
-                  <div className="font-semibold">{it.name}</div>
-                  {it.specs && <div className="text-xs text-[var(--muted)]">{it.specs}</div>}
-                </td>
-                <td className="border-b border-[var(--border)] py-2">{it.qty}</td>
-                <td className="border-b border-[var(--border)] py-2">
-                  {it.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </td>
-                <td className="border-b border-[var(--border)] py-2 font-bold text-[var(--accent)]">
-                  {(it.qty * it.price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </td>
+        <div className="table-scroll" style={{ marginTop: 14 }}>
+          <table className="table">
+            <thead>
+              <tr>
+                <th style={{ width: 30 }}>#</th>
+                <th>الصنف</th>
+                <th style={{ textAlign: 'center' }}>الكمية</th>
+                <th style={{ textAlign: 'center' }}>السعر</th>
+                <th style={{ textAlign: 'left' }}>الإجمالي</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {inv.items.map((it, idx) => (
+                <tr key={idx}>
+                  <td>
+                    <span className="item-index">{idx + 1}</span>
+                  </td>
+                  <td>
+                    <div style={{ fontWeight: 650 }}>{it.name}</div>
+                    {it.specs && <div className="t-caption">{it.specs}</div>}
+                  </td>
+                  <td style={{ textAlign: 'center', color: 'var(--muted)' }}>{it.qty}</td>
+                  <td className="amount" style={{ textAlign: 'center', fontWeight: 600 }}>
+                    {it.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="amount" style={{ textAlign: 'left', color: 'var(--accent)' }}>
+                    {(it.qty * it.price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Totals breakdown */}
-        <div className="relative z-10 mt-5 flex justify-end">
-          <div
-            className="w-full max-w-64 rounded-2xl px-6 py-4"
-            style={{ background: 'var(--total-bg)', border: '1px solid var(--total-border)' }}
-          >
-            <div className="flex justify-between text-xs text-[var(--muted)]">
-              <span>المجموع الفرعي</span>
-              <span className="font-bold text-[var(--text)]">{bt.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })} {currencySymbol(inv.currency)}</span>
+        <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: 18 }}>
+          <div style={{ width: '100%', maxWidth: 300, padding: '14px 18px', borderRadius: 'var(--radius-lg)', background: 'var(--total-bg)', border: '1px solid var(--total-border)' }}>
+            <div className="row-between" style={{ fontSize: 12.5 }}>
+              <span style={{ color: 'var(--muted)' }}>المجموع الفرعي</span>
+              <span className="amount" style={{ fontWeight: 700 }}>
+                {bt.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })} {currencySymbol(inv.currency)}
+              </span>
             </div>
             {bt.discountAmount > 0 && (
-              <div className="mt-1 flex justify-between text-xs">
-                <span className="text-[var(--muted)]">
+              <div className="row-between" style={{ fontSize: 12.5, marginTop: 6 }}>
+                <span style={{ color: 'var(--muted)' }}>
                   الخصم{inv.discountType === 'percent' ? ` (${inv.discountValue}%)` : ''}
                 </span>
-                <span className="font-bold text-emerald-400">− {bt.discountAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} {currencySymbol(inv.currency)}</span>
+                <span className="amount" style={{ color: 'var(--success)' }}>
+                  − {bt.discountAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} {currencySymbol(inv.currency)}
+                </span>
               </div>
             )}
             {bt.taxAmount > 0 && (
-              <div className="mt-1 flex justify-between text-xs">
-                <span className="text-[var(--muted)]">الضريبة ({inv.taxPercent}%)</span>
-                <span className="font-bold text-[var(--text)]">+ {bt.taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} {currencySymbol(inv.currency)}</span>
+              <div className="row-between" style={{ fontSize: 12.5, marginTop: 6 }}>
+                <span style={{ color: 'var(--muted)' }}>الضريبة ({inv.taxPercent}%)</span>
+                <span className="amount">+ {bt.taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} {currencySymbol(inv.currency)}</span>
               </div>
             )}
-            <div className="mt-2 border-t border-[var(--border)] pt-2">
-              <div className="text-xs text-[var(--muted)] mb-1">الإجمالي الكلي</div>
-              <div className="accent-text text-2xl font-black">
+            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--total-border)' }}>
+              <div className="t-caption" style={{ marginBottom: 4 }}>الإجمالي الكلي</div>
+              <div className="accent-text amount-lg" style={{ fontSize: 22 }}>
                 {inv.total.toLocaleString('en-US', { minimumFractionDigits: 2 })} {currencySymbol(inv.currency)}
               </div>
             </div>
@@ -328,28 +343,42 @@ export default function InvoiceDetail({ invoiceId, onBack, onEdit, onDuplicate, 
 
         {/* Notes */}
         {inv.notes && (
-          <div className="relative z-10 mt-4 rounded-xl border border-[var(--border)] bg-black/10 p-3 text-sm">
-            <div className="mb-1 text-xs font-bold text-[var(--muted)]">📝 ملاحظات</div>
-            <div className="whitespace-pre-line leading-7">{inv.notes}</div>
+          <div className="modal-note" style={{ marginTop: 16, flexDirection: 'column', alignItems: 'stretch', gap: 4 }}>
+            <span className="field-label">
+              <Icon name="pencil" size={14} />
+              ملاحظات
+            </span>
+            <span style={{ whiteSpace: 'pre-line', lineHeight: 1.8 }}>{inv.notes}</span>
           </div>
         )}
 
         {/* Default terms */}
         {meta.defaultTerms && (
-          <div className="relative z-10 mt-3 rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-3 text-sm">
-            <div className="mb-1 text-xs font-bold text-[var(--muted)]">📜 الشروط والأحكام</div>
-            <div className="whitespace-pre-line text-xs leading-7 text-[var(--muted)]">{meta.defaultTerms}</div>
+          <div
+            style={{
+              marginTop: 12, padding: '12px 14px', borderRadius: 'var(--radius-md)',
+              border: '1px dashed var(--dashed)', background: 'var(--warning-soft)',
+            }}
+          >
+            <div className="field-label" style={{ marginBottom: 4 }}>
+              <Icon name="file" size={14} />
+              الشروط والأحكام
+            </div>
+            <div className="hint" style={{ lineHeight: 1.9, whiteSpace: 'pre-line' }}>{meta.defaultTerms}</div>
           </div>
         )}
 
         {/* Attachment */}
         {inv.attachment && (
-          <div className="relative z-10 mt-3 rounded-xl border border-[var(--border)] bg-black/10 p-3">
-            <div className="mb-2 text-xs font-bold text-[var(--muted)]">📎 المرفق (صورة إشعار الحوالة)</div>
+          <div style={{ marginTop: 12, padding: 12, borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', background: 'var(--card-2)' }}>
+            <div className="field-label" style={{ marginBottom: 8 }}>
+              <Icon name="image" size={14} />
+              المرفق (صورة إشعار الحوالة)
+            </div>
             <img
               src={inv.attachment}
               onClick={() => setShowAttachment(true)}
-              className="max-h-40 cursor-zoom-in rounded-lg border border-[var(--border)] object-contain"
+              style={{ maxHeight: 160, borderRadius: 10, border: '1px solid var(--border)', objectFit: 'contain', cursor: 'zoom-in' }}
               alt="مرفق الفاتورة"
               title="اضغط للعرض المكبر"
             />
@@ -357,84 +386,81 @@ export default function InvoiceDetail({ invoiceId, onBack, onEdit, onDuplicate, 
         )}
 
         {/* Payment status card */}
-        <div className="relative z-10 mt-4 rounded-2xl border border-[var(--border)] p-4" style={{ background: 'var(--overlay-soft)' }}>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-bold ${
-                inv.paymentStatus === 'paid'
-                  ? 'bg-emerald-500/20 text-emerald-400'
-                  : inv.paymentStatus === 'partial'
-                    ? 'bg-amber-500/20 text-amber-400'
-                    : 'bg-red-500/15 text-red-400'
-              }`}
-            >
-              {payMeta.icon} {payMeta.label}
+        <div style={{ marginTop: 16, padding: 14, borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', background: 'var(--overlay-soft)' }}>
+          <div className="row-between" style={{ flexWrap: 'wrap' }}>
+            <span className={`badge ${inv.paymentStatus === 'paid' ? 'badge--success' : inv.paymentStatus === 'partial' ? 'badge--warning' : 'badge--danger'}`}>
+              {payMeta.label}
             </span>
             {overdue ? (
-              <span className="rounded-full bg-red-500/20 px-3 py-1 text-xs font-bold text-red-300">
-                ⚠️ متأخرة منذ {new Date(inv.dueDate!).toLocaleDateString('en-US')}
+              <span className="badge badge--danger">
+                متأخرة منذ {formatDate(inv.dueDate!)}
               </span>
             ) : inv.dueDate != null && remaining > 0 ? (
-              <span className="text-xs text-[var(--muted)]">
-                الاستحقاق: {new Date(inv.dueDate).toLocaleDateString('en-US')}
-              </span>
+              <span className="t-caption">الاستحقاق: {formatDate(inv.dueDate)}</span>
             ) : null}
           </div>
-          {/* Progress */}
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full rounded-full"
-              style={{
-                width: `${payPct}%`,
-                background: 'linear-gradient(90deg,var(--accent),var(--accent2))',
-                transition: 'width .3s',
-              }}
-            />
+
+          <div className="progress-track" style={{ marginTop: 12 }}>
+            <div className="progress-fill" style={{ width: `${payPct}%` }} />
           </div>
-          <div className="mt-2 flex justify-between text-xs text-[var(--muted)]">
-            <span>المدفوع: <b className="text-emerald-400">{(inv.paidAmount || 0).toLocaleString('en-US')} {currencySymbol(inv.currency)}</b></span>
-            <span>المتبقي: <b className={remaining > 0 ? 'text-red-400' : 'text-emerald-400'}>{remaining.toLocaleString('en-US')} {currencySymbol(inv.currency)}</b></span>
+          <div className="row-between" style={{ marginTop: 8, fontSize: 12.5 }}>
+            <span style={{ color: 'var(--muted)' }}>
+              المدفوع: <b className="amount" style={{ color: 'var(--success)' }}>{(inv.paidAmount || 0).toLocaleString('en-US')} {currencySymbol(inv.currency)}</b>
+            </span>
+            <span style={{ color: 'var(--muted)' }}>
+              المتبقي: <b className="amount" style={{ color: remaining > 0 ? 'var(--danger)' : 'var(--success)' }}>{remaining.toLocaleString('en-US')} {currencySymbol(inv.currency)}</b>
+            </span>
           </div>
           {inv.payMethod && (
-            <div className="mt-1.5 text-xs text-[var(--muted)]">
-              طريقة الدفع: <b className="text-[var(--text)]">{PAYMENT_METHOD_META[inv.payMethod].icon} {PAYMENT_METHOD_META[inv.payMethod].label}</b>
+            <div className="t-caption" style={{ marginTop: 6 }}>
+              طريقة الدفع: <b style={{ color: 'var(--text)' }}>{PAYMENT_METHOD_META[inv.payMethod].label}</b>
             </div>
           )}
           {remaining > 0 && (
-            <button
-              onClick={() => setShowPayModal(true)}
-              className="btn-brand mt-3 w-full rounded-xl py-2.5 text-sm font-bold"
-            >
-              💵 تسجيل دفعة
+            <button type="button" onClick={() => setShowPayModal(true)} className="btn btn--primary btn--block" style={{ marginTop: 12 }}>
+              <Icon name="cash" />
+              تسجيل دفعة
             </button>
           )}
+
           {/* Payment history */}
           {(inv.payments || []).length > 0 && (
-            <div className="mt-3 border-t border-[var(--border)] pt-2">
-              <div className="mb-1.5 text-xs font-bold text-[var(--muted)]">🧾 سجل الدفعات ({inv.payments.length})</div>
-              <div className="space-y-1.5">
+            <div style={{ marginTop: 14, paddingTop: 10, borderTop: '1px solid var(--separator)' }}>
+              <div className="field-label" style={{ marginBottom: 8 }}>
+                <Icon name="receipt" size={14} />
+                سجل الدفعات ({inv.payments.length})
+              </div>
+              <div className="pay-list">
                 {[...inv.payments].sort((a, b) => b.date - a.date).map((p) => (
-                  <div key={p.id} className="flex items-center justify-between gap-2 rounded-lg bg-black/20 px-2.5 py-1.5 text-xs">
-                    <div className="min-w-0">
-                      <span className="font-bold text-emerald-400">+ {p.amount.toLocaleString('en-US')} {currencySymbol(inv.currency)}</span>
-                      <span className="text-[var(--muted)]"> · {new Date(p.date).toLocaleDateString('en-US')}</span>
-                      {p.note && <span className="text-[var(--muted)]"> · {p.note}</span>}
+                  <div key={p.id} className="pay-item">
+                    <div className="pay-item-main">
+                      <div className="pay-item-amount">
+                        + {p.amount.toLocaleString('en-US')} <span>{currencySymbol(inv.currency)}</span>
+                      </div>
+                      <div className="pay-item-meta">
+                        {formatDate(p.date)}
+                        {p.note ? ` · ${p.note}` : ''}
+                      </div>
                     </div>
-                    <div className="flex shrink-0 gap-1">
+                    <div className="pay-item-actions">
                       <button
+                        type="button"
                         onClick={() => handlePrintReceipt(p.id)}
                         disabled={printingReceipt === p.id}
-                        className="rounded-md border border-[var(--border)] px-2 py-0.5 text-[11px] font-bold text-[var(--muted)] hover:bg-white/10 transition-colors disabled:opacity-60"
+                        className="btn btn--secondary btn--sm"
                         title="طباعة سند قبض/دفع"
                       >
-                        {printingReceipt === p.id ? '⏳' : '🖨️ سند'}
+                        <Icon name="printer" size={15} />
+                        سند
                       </button>
                       <button
+                        type="button"
                         onClick={() => setPendingVoidId(p.id)}
-                        className="rounded-md border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-[11px] font-bold text-[var(--danger)] hover:bg-red-500/20 transition-colors"
+                        className="btn btn--tint-danger btn--sm"
                         title="التراجع عن هذه الدفعة"
                       >
-                        ↩️ تراجع
+                        <Icon name="refresh" size={15} />
+                        تراجع
                       </button>
                     </div>
                   </div>
@@ -445,19 +471,19 @@ export default function InvoiceDetail({ invoiceId, onBack, onEdit, onDuplicate, 
         </div>
 
         {/* Footer */}
-        <div className="relative z-10 mt-8 flex items-end justify-between gap-3">
-          <div className="text-xs text-[var(--muted)]">صدرت عبر تطبيق فواتيري 🧾</div>
-          <div className="flex items-end gap-4">
+        <div className="row-between" style={{ alignItems: 'flex-end', marginTop: 26 }}>
+          <div className="t-caption">صدرت عبر تطبيق فواتيري</div>
+          <div className="inline" style={{ alignItems: 'flex-end', gap: 16 }}>
             {qrUrl && (
-              <div className="text-center">
-                <img src={qrUrl} className="h-16 w-16 rounded-lg bg-white p-1" alt="رمز التحقق" />
-                <div className="mt-1 text-[10px] text-[var(--muted)]">امسح للتحقق</div>
+              <div style={{ textAlign: 'center' }}>
+                <img src={qrUrl} style={{ height: 64, width: 64, borderRadius: 10, background: '#fff', padding: 4 }} alt="رمز التحقق" />
+                <div className="t-caption" style={{ marginTop: 4 }}>امسح للتحقق</div>
               </div>
             )}
             {meta.company.signature && (
-              <div className="text-center">
-                <img src={meta.company.signature} className="max-h-16 max-w-40 rounded-lg bg-white p-1" alt="التوقيع" />
-                <div className="mt-1 border-t border-[var(--border)] pt-1 text-xs text-[var(--muted)]">التوقيع</div>
+              <div style={{ textAlign: 'center' }}>
+                <img src={meta.company.signature} style={{ maxHeight: 64, maxWidth: 160, borderRadius: 10, background: '#fff', padding: 4 }} alt="التوقيع" />
+                <div className="t-caption" style={{ marginTop: 4, borderTop: '1px solid var(--border)', paddingTop: 4 }}>التوقيع</div>
               </div>
             )}
           </div>
@@ -492,42 +518,29 @@ export default function InvoiceDetail({ invoiceId, onBack, onEdit, onDuplicate, 
       )}
 
       {/* Attachment lightbox */}
-      {showAttachment && inv.attachment && (
-        <div
-          onClick={() => setShowAttachment(false)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 80,
-            background: 'rgba(0,0,0,0.9)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-          }}
-        >
+      <Modal
+        open={showAttachment && !!inv.attachment}
+        onClose={() => setShowAttachment(false)}
+        variant="center"
+        size="lg"
+        align="center"
+        title="المرفق"
+      >
+        {inv.attachment && (
           <img
             src={inv.attachment}
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 12, objectFit: 'contain' }}
+            style={{ maxWidth: '100%', maxHeight: '60dvh', borderRadius: 12, objectFit: 'contain', display: 'block', margin: '0 auto' }}
             alt="مرفق الفاتورة مكبر"
           />
-          <button
-            onClick={() => setShowAttachment(false)}
-            aria-label="إغلاق"
-            style={{
-              position: 'fixed', top: 16, left: 16,
-              width: 40, height: 40, borderRadius: '50%',
-              border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.12)',
-              color: '#fff', fontSize: 18, cursor: 'pointer',
-            }}
-          >
-            ✕
-          </button>
-        </div>
-      )}
+        )}
+      </Modal>
 
       {/* Void payment confirm */}
       <DeleteConfirmModal
         isOpen={pendingVoidId != null}
         title="التراجع عن الدفعة"
         itemName={pendingVoidEntry ? `دفعة ${pendingVoidEntry.amount.toLocaleString('en-US')} ${currencySymbol(inv.currency)}` : undefined}
-        itemMeta={pendingVoidEntry ? `${new Date(pendingVoidEntry.date).toLocaleDateString('en-US')}${pendingVoidEntry.note ? ` · ${pendingVoidEntry.note}` : ''}` : undefined}
+        itemMeta={pendingVoidEntry ? `${formatDate(pendingVoidEntry.date)}${pendingVoidEntry.note ? ` · ${pendingVoidEntry.note}` : ''}` : undefined}
         message="سيتم حذف هذه الدفعة من السجل وإعادة حساب المتبقي. هل تريد المتابعة؟"
         confirmLabel="نعم، تراجع عن الدفعة"
         cancelLabel="إلغاء"
