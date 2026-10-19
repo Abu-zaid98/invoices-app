@@ -21,10 +21,48 @@ import UpdatePrompt from './components/UpdatePrompt'
 import Icon from './components/ui/Icon'
 import BrandMark from './components/ui/BrandMark'
 
+const SESSION_KEY = 'fatoura.session'
+
+interface UnlockedSession {
+  at: number
+  mins: number
+}
+
+/** جلسة مفتوحة محفوظة لهذا التبويب — تنجو من إعادة التحميل وتنتهي بإغلاق التبويب أو القفل التلقائي */
+function readSession(): UnlockedSession | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<UnlockedSession> | null
+    if (!parsed || typeof parsed.at !== 'number') return null
+    const mins = typeof parsed.mins === 'number' ? parsed.mins : 0
+    if (mins > 0 && Date.now() - parsed.at > mins * 60_000) return null
+    return { at: parsed.at, mins }
+  } catch {
+    return null
+  }
+}
+
+function writeSession(mins: number) {
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ at: Date.now(), mins }))
+  } catch {
+    /* التخزين قد يكون معطلاً — يبقى القفل يعمل بالذاكرة */
+  }
+}
+
+function clearSession() {
+  try {
+    sessionStorage.removeItem(SESSION_KEY)
+  } catch {
+    /* تجاهل */
+  }
+}
+
 function Shell() {
   const { loaded, meta, invoices, saveInvoice, updateMeta } = useAppData()
   const { toast } = useToast()
-  const [unlocked, setUnlocked] = useState(false)
+  const [unlocked, setUnlocked] = useState(() => readSession() !== null)
   const [route, setRoute] = useState<Route>('dashboard')
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -54,13 +92,20 @@ function Shell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, unlocked])
 
-  // قفل تلقائي بعد خمول
+  // قفل تلقائي بعد خمول + حفظ الجلسة لهذا التبويب (تنجو من إعادة التحميل)
   useEffect(() => {
-    if (!loaded || !unlocked || !meta.autoLockMinutes) return
+    if (!loaded || !unlocked) return
+    const mins = meta.autoLockMinutes
     let timer: number | undefined
     const reset = () => {
       window.clearTimeout(timer)
-      timer = window.setTimeout(() => setUnlocked(false), meta.autoLockMinutes * 60 * 1000)
+      writeSession(mins)
+      if (mins > 0) {
+        timer = window.setTimeout(() => {
+          clearSession()
+          setUnlocked(false)
+        }, mins * 60 * 1000)
+      }
     }
     reset()
     const events: (keyof WindowEventMap)[] = ['pointerdown', 'keydown', 'touchstart', 'scroll']
@@ -122,7 +167,14 @@ function Shell() {
   }
 
   if (!unlocked) {
-    return <PinLogin onUnlock={() => setUnlocked(true)} />
+    return (
+      <PinLogin
+        onUnlock={() => {
+          writeSession(meta.autoLockMinutes)
+          setUnlocked(true)
+        }}
+      />
+    )
   }
 
   function navigate(r: Route) {
@@ -351,7 +403,14 @@ function Shell() {
           />
         )}
         {route === 'reports' && <Reports onOpenParty={(name) => openParty(name, 'reports')} />}
-        {route === 'settings' && <Settings onLocked={() => setUnlocked(false)} />}
+        {route === 'settings' && (
+          <Settings
+            onLocked={() => {
+              clearSession()
+              setUnlocked(false)
+            }}
+          />
+        )}
       </main>
 
       <BottomNav
@@ -394,6 +453,7 @@ function Shell() {
         cancelLabel="إلغاء"
         onConfirm={() => {
           setShowLogoutModal(false)
+          clearSession()
           setUnlocked(false)
         }}
         onCancel={() => setShowLogoutModal(false)}

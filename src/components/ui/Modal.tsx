@@ -5,15 +5,23 @@ import Icon from './Icon'
 /* قفل تمرير الخلفية مع عدّاد عالمي — يمنع تعارض المودالات المتتابعة */
 let lockCount = 0
 let savedOverflow = ''
-let savedPadding = ''
+let savedPadLeft = ''
+let savedPadRight = ''
 
 function lockScroll() {
   if (lockCount === 0) {
-    savedOverflow = document.body.style.overflow
-    savedPadding = document.body.style.paddingRight
+    const body = document.body
     const gap = window.innerWidth - document.documentElement.clientWidth
-    document.body.style.overflow = 'hidden'
-    if (gap > 0) document.body.style.paddingRight = `${gap}px`
+    // نكتشف جهة شريط التمرير فعلياً (يسار في RTL، يمين في LTR) بدل افتراض الاتجاه
+    const scrollbarOnLeft = body.getBoundingClientRect().left > 0.5
+    savedOverflow = body.style.overflow
+    savedPadLeft = body.style.paddingLeft
+    savedPadRight = body.style.paddingRight
+    body.style.overflow = 'hidden'
+    if (gap > 0) {
+      if (scrollbarOnLeft) body.style.paddingLeft = `${gap}px`
+      else body.style.paddingRight = `${gap}px`
+    }
   }
   lockCount++
 }
@@ -22,7 +30,8 @@ function unlockScroll() {
   lockCount = Math.max(0, lockCount - 1)
   if (lockCount === 0) {
     document.body.style.overflow = savedOverflow
-    document.body.style.paddingRight = savedPadding
+    document.body.style.paddingLeft = savedPadLeft
+    document.body.style.paddingRight = savedPadRight
   }
 }
 

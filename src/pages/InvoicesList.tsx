@@ -360,7 +360,7 @@ function SwipeRow({
         </span>
         <span className="row-main">
           <span className="row-title truncate" style={{ display: 'block' }}>{inv.party || '-'}</span>
-          <span className="row-sub inline-sm" style={{ display: 'flex', marginTop: 3, gap: 6 }}>
+          <span className="row-sub inline-row" style={{ display: 'flex', flexWrap: 'wrap', rowGap: 3, marginTop: 3, gap: 6 }}>
             <span>{formatDate(inv.date)}</span>
             <span className="badge badge--neutral">{meta.label}</span>
             <PayBadge inv={inv} />

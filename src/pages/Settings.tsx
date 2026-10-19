@@ -48,6 +48,12 @@ const SECTIONS: SectionDef[] = [
 
 const GROUPS = ['التخصيص', 'الحسابات', 'البيانات', 'النظام']
 
+/** خيارات وضع الواجهة — تُعرَض كبطاقتين بمعاينة مصغّرة */
+const THEME_OPTIONS = [
+  { id: 'dark', name: 'داكن', icon: 'moon' },
+  { id: 'light', name: 'فاتح', icon: 'sun' },
+] as const
+
 function useIsWide(query = '(min-width: 800px)') {
   const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches)
   useEffect(() => {
@@ -283,40 +289,65 @@ export default function Settings({ onLocked }: { onLocked: () => void }) {
 
   // ─── محتوى الأقسام ──────────────────────────────────────────────────────────
 
+  /** تنقّل لوحة المفاتيح بين وضعي الواجهة (مجموعة أزرار radio) */
+  function onThemeKey(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return
+    e.preventDefault()
+    const group = e.currentTarget
+    const next = meta.theme === 'dark' ? 'light' : 'dark'
+    updateMeta('theme', next).catch(() => {})
+    requestAnimationFrame(() => group.querySelector<HTMLElement>(`[data-mode-id="${next}"]`)?.focus())
+  }
+
   const appearanceSection = (
     <div className="card card--pad">
       <div className="section-head">
-        <span className="section-title">المظهر</span>
+        <span className="section-title">وضع الواجهة</span>
         <span className="stat-icon g-violet" style={{ width: 34, height: 34 }}><Icon name="sparkles" size={18} /></span>
       </div>
-      <p className="hint" style={{ marginBottom: 12 }}>اختر وضع الواجهة المناسب لك. يُحفظ فورًا.</p>
-      <div className="grid-2">
-        {([
-          { id: 'dark', name: 'داكن', icon: 'moon', bg: '#1c1c1e', bar: '#0A84FF', dot: '#0A84FF' },
-          { id: 'light', name: 'فاتح', icon: 'sun', bg: '#ffffff', bar: '#007AFF', dot: '#FF9F0A' },
-        ] as const).map((t) => {
+      <p className="hint" style={{ marginBottom: 12 }}>اختر الشكل المريح لعينك — يُحفظ التغيير فورًا.</p>
+
+      <div className="theme-grid" role="radiogroup" aria-label="وضع الواجهة" onKeyDown={onThemeKey}>
+        {THEME_OPTIONS.map((t) => {
           const on = meta.theme === t.id
           return (
             <button
               key={t.id}
               type="button"
-              onClick={() => updateMeta('theme', t.id).catch(() => {})}
-              className="theme-card"
+              role="radio"
+              aria-checked={on}
+              aria-label={`وضع ${t.name}`}
               data-active={on}
-              aria-pressed={on}
-              style={{ padding: 12, textAlign: 'center', cursor: 'pointer' }}
+              data-mode-id={t.id}
+              tabIndex={on ? 0 : -1}
+              className="theme-opt"
+              onClick={() => updateMeta('theme', t.id).catch(() => {})}
             >
-              <div style={{ margin: '0 auto 8px', height: 64, width: '100%', borderRadius: 12, padding: 8, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: t.bg, border: '1px solid var(--separator)', boxShadow: 'var(--shadow-sm)' }}>
-                <div style={{ height: 6, width: '66%', borderRadius: 99, background: t.bar }} />
-                <div className="inline-sm">
-                  <span style={{ width: 12, height: 12, borderRadius: 99, background: t.dot }} />
-                  <span style={{ height: 6, width: '50%', borderRadius: 99, background: 'var(--muted)', opacity: 0.4 }} />
-                </div>
-              </div>
-              <div className="inline-sm" style={{ justifyContent: 'center', fontWeight: 700, color: on ? 'var(--brand)' : 'var(--muted)', fontSize: 13.5 }}>
-                <Icon name={t.icon} size={16} />
+              <span className="theme-opt-preview" data-mode={t.id} aria-hidden="true">
+                <span className="thm-head">
+                  <span className="thm-logo" />
+                  <span className="thm-line thm-line--sm" />
+                </span>
+                <span className="thm-body">
+                  <span className="thm-line thm-line--lg thm-line--strong" />
+                  <span className="thm-line thm-line--md" />
+                </span>
+                <span className="thm-foot">
+                  <span className="thm-pill" />
+                  <span className="thm-pill thm-pill--ghost" />
+                </span>
+              </span>
+
+              <span className="theme-opt-label">
+                <Icon name={t.icon} size={15} />
                 {t.name}
-              </div>
+              </span>
+
+              {on && (
+                <span className="theme-opt-check" aria-hidden="true">
+                  <Icon name="check" size={13} />
+                </span>
+              )}
             </button>
           )
         })}

@@ -247,7 +247,7 @@ export default function InvoiceDetail({ invoiceId, onBack, onEdit, onDuplicate, 
             className="row-between btn btn--secondary"
             style={{ width: '100%', marginTop: 14, minHeight: 46, borderRadius: 'var(--radius-md)' }}
           >
-            <span className="inline-sm" style={{ fontWeight: 700, color: 'var(--violet)' }}>
+            <span className="inline-row" style={{ fontWeight: 700, color: 'var(--violet)' }}>
               <Icon name="refresh" size={16} />
               مرتبط بالفاتورة #{String(inv.linkedId).padStart(4, '0')}
             </span>

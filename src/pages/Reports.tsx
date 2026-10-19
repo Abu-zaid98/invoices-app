@@ -135,7 +135,7 @@ export default function Reports({ onOpenParty }: { onOpenParty?: (name: string) 
           options={meta.currencies.map((c) => ({ value: c, label: `${c} ${currencySymbol(c)}` }))}
         />
         {mixedCur && (
-          <p className="hint inline-sm" style={{ marginTop: 8, display: 'flex' }}>
+          <p className="hint inline-row" style={{ marginTop: 8, display: 'flex' }}>
             <Icon name="refresh" size={14} />
             تُحوَّل المبالغ حسب أسعار الصرف المضبوطة في الإعدادات
           </p>
@@ -443,11 +443,11 @@ function MonthlyChart({ currency }: { currency: string }) {
         })}
       </svg>
       <div className="inline" style={{ justifyContent: 'center', gap: 16, marginTop: 10, fontSize: 12, color: 'var(--muted)' }}>
-        <span className="inline-sm">
+        <span className="inline-row">
           <span style={{ width: 8, height: 8, borderRadius: 99, background: '#22c9a3', display: 'inline-block' }} />
           مبيعات
         </span>
-        <span className="inline-sm">
+        <span className="inline-row">
           <span style={{ width: 8, height: 8, borderRadius: 99, background: '#f59e0b', display: 'inline-block' }} />
           مشتريات
         </span>

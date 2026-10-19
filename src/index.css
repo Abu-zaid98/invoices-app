@@ -172,6 +172,10 @@
 
 html, body, #root { height: 100%; }
 
+/* حماية من أي انزلاق أفقي (خصوصاً RTL + شريط تمرير كلاسيكي) */
+html { overflow-x: hidden; }
+@supports (overflow: clip) { html { overflow-x: clip; } }
+
 * { -webkit-tap-highlight-color: transparent; }
 
 html { -webkit-text-size-adjust: 100%; }
@@ -278,7 +282,8 @@ body::before {
 .stack-lg { display: flex; flex-direction: column; gap: 16px; }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .inline { display: flex; align-items: center; gap: 8px; }
-.inline-sm { display: flex; align-items: center; gap: 6px; }
+/* ملاحظة: لا تسمِّ هذا الصنف inline-sm — يتعارض مع أداة Tailwind التي تفرض inline-size: 24rem */
+.inline-row { display: flex; align-items: center; gap: 6px; min-inline-size: 0; }
 .grow { flex: 1; min-width: 0; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -418,14 +423,124 @@ body::before {
 .table tbody tr.clickable { cursor: pointer; }
 .table tbody tr.clickable:active { background: var(--chip); }
 
-/* بطاقة مظهر/قالب قابلة للاختيار */
-.theme-card {
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--chip);
-  transition: border-color .18s ease, background-color .18s ease;
+/* ─── منتقي وضع الواجهة (فاتح/داكن) ────────────────────────────────────────
+   بطاقتان متساويتان بمعاينة مصغّرة حقيقية للواجهة، بلا أي إزاحة عند الاختيار:
+   سماكة الحدود ثابتة، والحالة النشطة تُعبَّر عنها بحدود + هالة + علامة صح. */
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
-.theme-card[data-active="true"] { border-color: var(--brand); background: var(--brand-chip); }
+
+.theme-opt {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+  padding: 9px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card-2);
+  color: var(--text);
+  font-family: inherit;
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
+}
+.theme-opt:active { transform: scale(0.975); }
+.theme-opt[data-active="true"] {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+.theme-opt:focus-visible { outline: none; box-shadow: 0 0 0 3.5px var(--ring); }
+
+/* المعاينة المصغّرة — تأخذ ألوان الوضع الذي تُمثّله لا الوضع الحالي */
+.theme-opt-preview {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  height: 78px;
+  padding: 9px;
+  border-radius: 12px;
+  border: 1px solid var(--pv-border);
+  background: var(--pv-bg);
+  overflow: hidden;
+}
+.theme-opt-preview[data-mode="dark"] {
+  --pv-bg: #15171e;
+  --pv-card: #20232c;
+  --pv-line: rgba(255, 255, 255, 0.18);
+  --pv-line-strong: rgba(255, 255, 255, 0.34);
+  --pv-border: rgba(255, 255, 255, 0.1);
+  --pv-brand: #0a84ff;
+}
+.theme-opt-preview[data-mode="light"] {
+  --pv-bg: #ffffff;
+  --pv-card: #f4f6fa;
+  --pv-line: rgba(17, 18, 25, 0.14);
+  --pv-line-strong: rgba(17, 18, 25, 0.26);
+  --pv-border: rgba(17, 18, 25, 0.1);
+  --pv-brand: #007aff;
+}
+
+.thm-head { display: flex; align-items: center; gap: 6px; }
+.thm-logo { width: 9px; height: 9px; border-radius: 3px; background: var(--pv-brand); flex-shrink: 0; }
+.thm-line { height: 4px; border-radius: 99px; background: var(--pv-line); }
+.thm-line--sm { width: 34px; }
+.thm-line--md { width: 58%; }
+.thm-line--lg { width: 82%; }
+.thm-line--strong { background: var(--pv-line-strong); }
+.thm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 7px;
+  border-radius: 8px;
+  border: 1px solid var(--pv-border);
+  background: var(--pv-card);
+}
+.thm-foot { display: flex; align-items: center; gap: 5px; }
+.thm-pill { height: 7px; width: 30px; border-radius: 99px; background: var(--pv-brand); flex-shrink: 0; }
+.thm-pill--ghost { width: 18px; background: var(--pv-line); }
+
+.theme-opt-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: var(--text-2);
+  transition: color 0.2s ease;
+}
+.theme-opt[data-active="true"] .theme-opt-label { color: var(--brand); }
+
+.theme-opt-check {
+  position: absolute;
+  top: 6px;
+  inset-inline-end: 6px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 3px 10px var(--brand-glow), inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  pointer-events: none;
+  animation: checkPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.theme-opt-check svg { width: 13px; height: 13px; }
+@keyframes checkPop {
+  from { transform: scale(0.4); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
 
 /* لوحة أرقام PIN */
 /* ترتيب قياسي معروف: 1 في أعلى اليسار ثم 2، 3 … (بغضّ النظر عن اتجاه الصفحة RTL) */

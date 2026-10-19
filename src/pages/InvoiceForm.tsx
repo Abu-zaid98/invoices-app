@@ -368,7 +368,7 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
                       onClick={() => { setParty(p.name); setPartyFocus(false) }}
                       className="drop-item"
                     >
-                      <span className="inline-sm" style={{ fontWeight: 600 }}>
+                      <span className="inline-row" style={{ fontWeight: 600 }}>
                         <Icon name="user" size={15} />
                         {p.name}
                       </span>
@@ -415,7 +415,7 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
             {items.map((it, idx) => (
               <div className="item-card" key={idx}>
                 <div className="item-head">
-                  <span className="inline-sm" style={{ fontWeight: 700, fontSize: 13 }}>
+                  <span className="inline-row" style={{ fontWeight: 700, fontSize: 13 }}>
                     <span className="item-index">{idx + 1}</span>
                     صنف
                   </span>
@@ -454,7 +454,7 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
                           }}
                           className="drop-item"
                         >
-                          <span className="inline-sm" style={{ fontWeight: 600 }}>
+                          <span className="inline-row" style={{ fontWeight: 600 }}>
                             <Icon name="tag" size={15} />
                             {c.name}
                           </span>
