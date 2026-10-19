@@ -187,8 +187,8 @@ export default function InvoicesList({ onOpen, initialPayFilter = 'all' }: { onO
             <span className="section-title">النتائج</span>
             <span className="section-meta">{filtered.length}</span>
           </div>
-          <div className="card card--flush">
-            {filtered.length === 0 ? (
+          {filtered.length === 0 ? (
+            <div className="card card--flush">
               <div className="empty">
                 <span className="empty-icon">
                   <Icon name="search" />
@@ -196,8 +196,10 @@ export default function InvoicesList({ onOpen, initialPayFilter = 'all' }: { onO
                 <div className="empty-title">لا توجد نتائج مطابقة</div>
                 <div className="empty-text">جرّب تعديل كلمات البحث أو إزالة بعض الفلاتر.</div>
               </div>
-            ) : (
-              filtered.map((inv) => (
+            </div>
+          ) : (
+            <div className="card card--flush inv-list">
+              {filtered.map((inv) => (
                 <SwipeRow
                   key={inv.id}
                   inv={inv}
@@ -207,9 +209,9 @@ export default function InvoicesList({ onOpen, initialPayFilter = 'all' }: { onO
                   onTrash={(v) => setPendingDelete(v)}
                   onPay={(v) => { setOpenSwipeId(null); setPayTarget(v) }}
                 />
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
           {filtered.length > 0 && (
             <p className="hint" style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <Icon name="info" size={14} />

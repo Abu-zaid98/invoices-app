@@ -77,7 +77,7 @@ export default function Dashboard({ onOpenInvoice, onOpenOverdue, onOpenInvoices
   const recent = [...invoices].reverse().slice(0, 5)
 
   return (
-    <div className="stack">
+    <div className="stack dash-page">
       {overdue.length > 0 && (
         <button
           type="button"

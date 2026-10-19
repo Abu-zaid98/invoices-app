@@ -155,7 +155,7 @@ export default function InvoiceDetail({ invoiceId, onBack, onEdit, onDuplicate, 
   }
 
   return (
-    <div className="stack">
+    <div className="stack detail-doc">
       {/* Top bar */}
       <div className="page-head print:hidden">
         <button type="button" className="icon-btn icon-btn--ghost" onClick={onBack} aria-label="رجوع">

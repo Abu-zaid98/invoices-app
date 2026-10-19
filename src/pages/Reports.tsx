@@ -124,9 +124,9 @@ export default function Reports({ onOpenParty }: { onOpenParty?: (name: string) 
   }
 
   return (
-    <div className="stack-lg">
+    <div className="stack-lg reports-grid">
       {/* عملة العرض */}
-      <div className="card card--pad">
+      <div className="card card--pad reports-currency">
         <label className="field-label" style={{ marginBottom: 6 }}>عرض التقارير بعملة</label>
         <Select
           value={reportCurrency}
@@ -143,7 +143,7 @@ export default function Reports({ onOpenParty }: { onOpenParty?: (name: string) 
       </div>
 
       {/* صافي الربح الشهري */}
-      <div className="card card--pad">
+      <div className="card card--pad reports-chart">
         <div className="section-head">
           <span className="section-title">صافي الربح الشهري ({reportCurrency})</span>
           <span className="stat-icon g-blue" style={{ width: 34, height: 34 }}>
@@ -154,7 +154,7 @@ export default function Reports({ onOpenParty }: { onOpenParty?: (name: string) 
       </div>
 
       {/* تصدير كشف عمليات PDF */}
-      <div className="card card--pad">
+      <div className="card card--pad reports-pdf">
         <div className="section-head">
           <span className="section-title">تصدير كشف عمليات PDF</span>
           <span className="stat-icon g-violet" style={{ width: 34, height: 34 }}>
@@ -195,7 +195,7 @@ export default function Reports({ onOpenParty }: { onOpenParty?: (name: string) 
       </div>
 
       {/* الأكثر توريدًا (شراء) */}
-      <div className="card card--pad">
+      <div className="card card--pad reports-purchases">
         <div className="section-head">
           <span className="section-title">الأكثر توريدًا (شراء)</span>
           <span className="stat-icon g-amber" style={{ width: 34, height: 34 }}>
@@ -206,7 +206,7 @@ export default function Reports({ onOpenParty }: { onOpenParty?: (name: string) 
       </div>
 
       {/* الديون */}
-      <div className="card card--pad">
+      <div className="card card--pad reports-debts">
         <div className="section-head">
           <span className="section-title">الديون المستحقة ({reportCurrency})</span>
           <span className="stat-icon g-red" style={{ width: 34, height: 34 }}>
@@ -225,7 +225,7 @@ export default function Reports({ onOpenParty }: { onOpenParty?: (name: string) 
       </div>
 
       {/* دليل الأطراف والأصناف */}
-      <div className="card card--pad">
+      <div className="card card--pad reports-directory">
         <div className="section-head">
           <span className="section-title">دليل العملاء والموردين</span>
           <span className="stat-icon g-blue" style={{ width: 34, height: 34 }}>
@@ -236,7 +236,7 @@ export default function Reports({ onOpenParty }: { onOpenParty?: (name: string) 
       </div>
 
       {/* الأكثر بيعًا */}
-      <div className="card card--pad">
+      <div className="card card--pad reports-sales">
         <div className="section-head">
           <span className="section-title">الأكثر بيعًا</span>
           <span className="stat-icon g-green" style={{ width: 34, height: 34 }}>
@@ -247,7 +247,7 @@ export default function Reports({ onOpenParty }: { onOpenParty?: (name: string) 
       </div>
 
       {/* تتبع سعر البيع */}
-      <div className="card card--pad">
+      <div className="card card--pad reports-trend">
         <div className="section-head">
           <span className="section-title">تتبع سعر البيع عبر الزمن ({reportCurrency})</span>
           <span className="stat-icon g-violet" style={{ width: 34, height: 34 }}>

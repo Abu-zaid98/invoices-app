@@ -324,8 +324,10 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
           </div>
         )}
 
-        {/* النوع + الطرف + العملة */}
-        <div className="card card--pad stack-sm">
+        <div className="form-cols">
+          <div className="form-col">
+            {/* النوع + الطرف + العملة */}
+            <div className="card card--pad stack-sm">
           <div className="segmented" role="group" aria-label="نوع الفاتورة">
             {(['purchase', 'sale'] as InvoiceType[]).map((t) => (
               <button
@@ -611,10 +613,12 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
               </div>
             </>
           )}
-        </div>
+          </div>
+          </div>
 
-        {/* الخصم والضريبة والملاحظات */}
-        <div className="card card--pad">
+          <div className="form-col form-col--side">
+            {/* الخصم والضريبة والملاحظات */}
+            <div className="card card--pad">
           <div className="section-head">
             <span className="section-title">الخصم والضريبة</span>
             <span className="stat-icon g-amber" style={{ width: 34, height: 34 }}>
@@ -758,6 +762,8 @@ export default function InvoiceForm({ editingInvoice, draft, onDone, onCancel }:
           <button type="button" onClick={handleCancelClick} className="btn btn--secondary" style={{ minHeight: 50 }}>
             إلغاء
           </button>
+        </div>
+          </div>
         </div>
       </div>
 
